@@ -1,0 +1,11 @@
+{
+  "sku": "copper-leaf-earrings",
+  "createdAt": "2024-11-01T00:00:00.000Z",
+  "name": "Copper Leaf Earrings",
+  "category": "earrings",
+  "description": "Handcrafted copper earrings shaped like delicate leaves. Lightweight and comfortable for all-day wear. Each leaf is hand-formed and has unique texture.",
+  "available": true,
+  "images": [
+    "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80"
+  ]
+}

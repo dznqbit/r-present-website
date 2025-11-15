@@ -1,0 +1,125 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+// Get unique categories from products
+const products = await getCollection('products');
+const categories = [...new Set(products.map(p => p.data.category))].sort();
+---
+
+<BaseLayout title="R. Present - Handcrafted Jewelry">
+  <section class="hero">
+    <h1>R. Present</h1>
+    <p class="tagline">Handcrafted jewelry, made in America</p>
+  </section>
+
+  <section class="quick-links">
+    <div class="link-card">
+      <h2>Upcoming Markets</h2>
+      <p>Find us at local markets and events</p>
+      <a href="/markets" class="button">View Markets</a>
+    </div>
+
+    <div class="link-card">
+      <h2>Shop by Category</h2>
+      <ul class="category-list">
+        {categories.map(category => (
+          <li>
+            <a href={`/categories/${category}`}>{category}</a>
+          </li>
+        ))}
+      </ul>
+      {categories.length === 0 && <p>Categories coming soon</p>}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 3rem 0;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 3rem;
+  }
+
+  .hero h1 {
+    font-size: 3rem;
+    margin: 0 0 1rem 0;
+    font-weight: 300;
+  }
+
+  .tagline {
+    font-size: 1.25rem;
+    color: #666;
+    margin: 0;
+  }
+
+  .quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .link-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 2rem;
+    background: #fafafa;
+  }
+
+  .link-card h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.5rem;
+  }
+
+  .link-card p {
+    margin: 0 0 1.5rem 0;
+    color: #666;
+  }
+
+  .button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #333;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+
+  .button:hover {
+    background: #555;
+  }
+
+  .category-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .category-list li {
+    margin: 0.5rem 0;
+  }
+
+  .category-list a {
+    text-decoration: none;
+    color: #333;
+    text-transform: capitalize;
+    font-size: 1.125rem;
+  }
+
+  .category-list a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 768px) {
+    .hero h1 {
+      font-size: 2rem;
+    }
+
+    .quick-links {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

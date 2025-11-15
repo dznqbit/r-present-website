@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const products = await getCollection('products');
+const categories = [...new Set(products.map(p => p.data.category))].sort();
+
+// Count products per category
+const categoryCount = products.reduce((acc, product) => {
+  const cat = product.data.category;
+  acc[cat] = (acc[cat] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+---
+
+<BaseLayout title="Shop by Category - R. Present">
+  <h1>Shop by Category</h1>
+
+  <div class="categories-grid">
+    {categories.map(category => (
+      <a href={`/categories/${category}`} class="category-card">
+        <h2>{category}</h2>
+        <p>{categoryCount[category]} {categoryCount[category] === 1 ? 'item' : 'items'}</p>
+      </a>
+    ))}
+  </div>
+
+  {categories.length === 0 && (
+    <p class="no-categories">No products available yet. Check back soon!</p>
+  )}
+</BaseLayout>
+
+<style>
+  h1 {
+    font-size: 2.5rem;
+    margin: 0 0 2rem 0;
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .category-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 2rem;
+    text-decoration: none;
+    color: inherit;
+    background: #fafafa;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .category-card h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    text-transform: capitalize;
+  }
+
+  .category-card p {
+    margin: 0;
+    color: #666;
+  }
+
+  .no-categories {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-size: 1.125rem;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    .categories-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

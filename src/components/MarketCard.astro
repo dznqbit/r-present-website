@@ -1,0 +1,87 @@
+---
+interface Props {
+  name: string;
+  date: Date;
+  location: string;
+  address?: string;
+  url?: string;
+}
+
+const { name, date, location, address, url } = Astro.props;
+
+const formatDate = (date: Date) => {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(date);
+};
+
+const isUpcoming = date >= new Date();
+---
+
+<article class="market-card" class:list={[{ past: !isUpcoming }]}>
+  <div class="market-info">
+    <h3>{name}</h3>
+    <p class="date">{formatDate(date)}</p>
+    <p class="location">{location}</p>
+    {address && <p class="address">{address}</p>}
+  </div>
+  {url && (
+    <a href={url} target="_blank" rel="noopener" class="market-link">
+      More Info
+    </a>
+  )}
+</article>
+
+<style>
+  .market-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    background: white;
+  }
+
+  .market-card.past {
+    opacity: 0.6;
+  }
+
+  .market-info h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+  }
+
+  .market-info p {
+    margin: 0.5rem 0;
+  }
+
+  .date {
+    font-weight: bold;
+    color: #333;
+  }
+
+  .location {
+    color: #666;
+  }
+
+  .address {
+    font-size: 0.875rem;
+    color: #888;
+  }
+
+  .market-link {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #333;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 0.875rem;
+  }
+
+  .market-link:hover {
+    background: #555;
+  }
+</style>

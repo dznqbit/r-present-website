@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import MarketCard from '../components/MarketCard.astro';
+import { getCollection } from 'astro:content';
+
+const markets = await getCollection('markets');
+const sortedMarkets = markets.sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
+
+const upcomingMarkets = sortedMarkets.filter(m => m.data.date >= new Date());
+const pastMarkets = sortedMarkets.filter(m => m.data.date < new Date());
+---
+
+<BaseLayout title="Upcoming Markets - R. Present" description="Find us at upcoming markets and craft shows">
+  <h1>Upcoming Markets</h1>
+
+  {upcomingMarkets.length > 0 ? (
+    <div class="markets-grid">
+      {upcomingMarkets.map(market => (
+        <MarketCard {...market.data} />
+      ))}
+    </div>
+  ) : (
+    <p class="no-markets">No upcoming markets scheduled at this time. Check back soon!</p>
+  )}
+
+  {pastMarkets.length > 0 && (
+    <>
+      <h2>Past Markets</h2>
+      <div class="markets-grid">
+        {pastMarkets.reverse().slice(0, 6).map(market => (
+          <MarketCard {...market.data} />
+        ))}
+      </div>
+    </>
+  )}
+</BaseLayout>
+
+<style>
+  h1 {
+    font-size: 2.5rem;
+    margin: 0 0 2rem 0;
+  }
+
+  h2 {
+    font-size: 2rem;
+    margin: 3rem 0 2rem 0;
+  }
+
+  .markets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .no-markets {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-size: 1.125rem;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    .markets-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

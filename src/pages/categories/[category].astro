@@ -1,0 +1,89 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const products = await getCollection('products');
+  const categories = [...new Set(products.map(p => p.data.category))];
+
+  return categories.map(category => ({
+    params: { category },
+    props: {
+      products: products.filter(p => p.data.category === category),
+    },
+  }));
+}
+
+const { category } = Astro.params;
+const { products } = Astro.props;
+
+// Sort products by creation date, newest first
+const sortedProducts = products.sort((a, b) =>
+  b.data.createdAt.getTime() - a.data.createdAt.getTime()
+);
+---
+
+<BaseLayout title={`${category} - R. Present`}>
+  <div class="category-header">
+    <a href="/categories" class="back-link">&larr; All Categories</a>
+    <h1>{category}</h1>
+    <p>{products.length} {products.length === 1 ? 'item' : 'items'}</p>
+  </div>
+
+  <div class="products-grid">
+    {sortedProducts.map(product => (
+      <ProductCard
+        sku={product.id}
+        name={product.data.name}
+        category={product.data.category}
+        available={product.data.available}
+        images={product.data.images}
+      />
+    ))}
+  </div>
+</BaseLayout>
+
+<style>
+  .category-header {
+    margin-bottom: 2rem;
+  }
+
+  .back-link {
+    display: inline-block;
+    color: #666;
+    text-decoration: none;
+    margin-bottom: 1rem;
+  }
+
+  .back-link:hover {
+    color: #333;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin: 0 0 0.5rem 0;
+    text-transform: capitalize;
+  }
+
+  .category-header p {
+    color: #666;
+    margin: 0;
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+  }
+</style>

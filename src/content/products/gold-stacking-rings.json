@@ -1,0 +1,11 @@
+{
+  "sku": "gold-stacking-rings",
+  "createdAt": "2024-09-20T00:00:00.000Z",
+  "name": "Gold Stacking Rings Set",
+  "category": "rings",
+  "description": "Set of three handcrafted 14k gold-filled stacking rings. Each ring features different textures - hammered, smooth, and twisted. Can be worn together or separately.",
+  "available": false,
+  "images": [
+    "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=800&q=80"
+  ]
+}

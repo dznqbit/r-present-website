@@ -10,11 +10,11 @@ interface Props {
 const { name, date, location, address, url } = Astro.props;
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  return new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   }).format(date);
 };
 
@@ -28,11 +28,13 @@ const isUpcoming = date >= new Date();
     <p class="location">{location}</p>
     {address && <p class="address">{address}</p>}
   </div>
-  {url && (
-    <a href={url} target="_blank" rel="noopener" class="market-link">
-      More Info
-    </a>
-  )}
+  {
+    url && (
+      <a href={url} target="_blank" rel="noopener" class="market-link">
+        More Info
+      </a>
+    )
+  }
 </article>
 
 <style>

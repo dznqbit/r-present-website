@@ -1,38 +1,52 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import MarketCard from '../components/MarketCard.astro';
-import { getCollection } from 'astro:content';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import MarketCard from "../components/MarketCard.astro";
+import { getCollection } from "astro:content";
 
-const markets = await getCollection('markets');
-const sortedMarkets = markets.sort((a, b) => a.data.date.getTime() - b.data.date.getTime());
+const markets = await getCollection("markets");
+const sortedMarkets = markets.sort(
+  (a, b) => a.data.date.getTime() - b.data.date.getTime(),
+);
 
-const upcomingMarkets = sortedMarkets.filter(m => m.data.date >= new Date());
-const pastMarkets = sortedMarkets.filter(m => m.data.date < new Date());
+const upcomingMarkets = sortedMarkets.filter((m) => m.data.date >= new Date());
+const pastMarkets = sortedMarkets.filter((m) => m.data.date < new Date());
 ---
 
-<BaseLayout title="Upcoming Markets - R. Present" description="Find us at upcoming markets and craft shows">
+<BaseLayout
+  title="Upcoming Markets - R. Present"
+  description="Find us at upcoming markets and craft shows"
+>
   <h1>Upcoming Markets</h1>
 
-  {upcomingMarkets.length > 0 ? (
-    <div class="markets-grid">
-      {upcomingMarkets.map(market => (
-        <MarketCard {...market.data} />
-      ))}
-    </div>
-  ) : (
-    <p class="no-markets">No upcoming markets scheduled at this time. Check back soon!</p>
-  )}
-
-  {pastMarkets.length > 0 && (
-    <>
-      <h2>Past Markets</h2>
+  {
+    upcomingMarkets.length > 0 ? (
       <div class="markets-grid">
-        {pastMarkets.reverse().slice(0, 6).map(market => (
+        {upcomingMarkets.map((market) => (
           <MarketCard {...market.data} />
         ))}
       </div>
-    </>
-  )}
+    ) : (
+      <p class="no-markets">
+        No upcoming markets scheduled at this time. Check back soon!
+      </p>
+    )
+  }
+
+  {
+    pastMarkets.length > 0 && (
+      <>
+        <h2>Past Markets</h2>
+        <div class="markets-grid">
+          {pastMarkets
+            .reverse()
+            .slice(0, 6)
+            .map((market) => (
+              <MarketCard {...market.data} />
+            ))}
+        </div>
+      </>
+    )
+  }
 </BaseLayout>
 
 <style>

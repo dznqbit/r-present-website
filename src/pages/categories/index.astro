@@ -1,33 +1,43 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
 
-const products = await getCollection('products');
-const categories = [...new Set(products.map(p => p.data.category))].sort();
+const products = await getCollection("products");
+const categories = [...new Set(products.map((p) => p.data.category))].sort();
 
 // Count products per category
-const categoryCount = products.reduce((acc, product) => {
-  const cat = product.data.category;
-  acc[cat] = (acc[cat] || 0) + 1;
-  return acc;
-}, {} as Record<string, number>);
+const categoryCount = products.reduce(
+  (acc, product) => {
+    const cat = product.data.category;
+    acc[cat] = (acc[cat] || 0) + 1;
+    return acc;
+  },
+  {} as Record<string, number>,
+);
 ---
 
 <BaseLayout title="Shop by Category - R. Present">
   <h1>Shop by Category</h1>
 
   <div class="categories-grid">
-    {categories.map(category => (
-      <a href={`/categories/${category}`} class="category-card">
-        <h2>{category}</h2>
-        <p>{categoryCount[category]} {categoryCount[category] === 1 ? 'item' : 'items'}</p>
-      </a>
-    ))}
+    {
+      categories.map((category) => (
+        <a href={`/categories/${category}`} class="category-card">
+          <h2>{category}</h2>
+          <p>
+            {categoryCount[category]}{" "}
+            {categoryCount[category] === 1 ? "item" : "items"}
+          </p>
+        </a>
+      ))
+    }
   </div>
 
-  {categories.length === 0 && (
-    <p class="no-categories">No products available yet. Check back soon!</p>
-  )}
+  {
+    categories.length === 0 && (
+      <p class="no-categories">No products available yet. Check back soon!</p>
+    )
+  }
 </BaseLayout>
 
 <style>
@@ -50,7 +60,9 @@ const categoryCount = products.reduce((acc, product) => {
     color: inherit;
     background: #fafafa;
     text-align: center;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
   }
 
   .category-card:hover {

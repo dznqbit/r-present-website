@@ -1,10 +1,10 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import { getCollection } from 'astro:content';
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
 
 // Get unique categories from products
-const products = await getCollection('products');
-const categories = [...new Set(products.map(p => p.data.category))].sort();
+const products = await getCollection("products");
+const categories = [...new Set(products.map((p) => p.data.category))].sort();
 ---
 
 <BaseLayout title="R. Present - Handcrafted Jewelry">
@@ -23,11 +23,13 @@ const categories = [...new Set(products.map(p => p.data.category))].sort();
     <div class="link-card">
       <h2>Shop by Category</h2>
       <ul class="category-list">
-        {categories.map(category => (
-          <li>
-            <a href={`/categories/${category}`}>{category}</a>
-          </li>
-        ))}
+        {
+          categories.map((category) => (
+            <li>
+              <a href={`/categories/${category}`}>{category}</a>
+            </li>
+          ))
+        }
       </ul>
       {categories.length === 0 && <p>Categories coming soon</p>}
     </div>

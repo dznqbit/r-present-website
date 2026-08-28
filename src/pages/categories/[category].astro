@@ -1,16 +1,16 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import ProductCard from '../../components/ProductCard.astro';
-import { getCollection } from 'astro:content';
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { getCollection } from "astro:content";
 
 export async function getStaticPaths() {
-  const products = await getCollection('products');
-  const categories = [...new Set(products.map(p => p.data.category))];
+  const products = await getCollection("products");
+  const categories = [...new Set(products.map((p) => p.data.category))];
 
-  return categories.map(category => ({
+  return categories.map((category) => ({
     params: { category },
     props: {
-      products: products.filter(p => p.data.category === category),
+      products: products.filter((p) => p.data.category === category),
     },
   }));
 }
@@ -19,8 +19,8 @@ const { category } = Astro.params;
 const { products } = Astro.props;
 
 // Sort products by creation date, newest first
-const sortedProducts = products.sort((a, b) =>
-  b.data.createdAt.getTime() - a.data.createdAt.getTime()
+const sortedProducts = products.sort(
+  (a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime(),
 );
 ---
 
@@ -28,19 +28,21 @@ const sortedProducts = products.sort((a, b) =>
   <div class="category-header">
     <a href="/categories" class="back-link">&larr; All Categories</a>
     <h1>{category}</h1>
-    <p>{products.length} {products.length === 1 ? 'item' : 'items'}</p>
+    <p>{products.length} {products.length === 1 ? "item" : "items"}</p>
   </div>
 
   <div class="products-grid">
-    {sortedProducts.map(product => (
-      <ProductCard
-        sku={product.id}
-        name={product.data.name}
-        category={product.data.category}
-        available={product.data.available}
-        images={product.data.images}
-      />
-    ))}
+    {
+      sortedProducts.map((product) => (
+        <ProductCard
+          sku={product.id}
+          name={product.data.name}
+          category={product.data.category}
+          available={product.data.available}
+          images={product.data.images}
+        />
+      ))
+    }
   </div>
 </BaseLayout>
 

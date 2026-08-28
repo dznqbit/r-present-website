@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { sku, name, category, available, images } = Astro.props;
-const thumbnail = images[0] || '/placeholder.jpg';
+const thumbnail = images[0] || "/placeholder.jpg";
 ---
 
 <article class="product-card">
@@ -29,7 +29,9 @@ const thumbnail = images[0] || '/placeholder.jpg';
     border: 1px solid #e0e0e0;
     border-radius: 8px;
     overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
   }
 
   .product-card:hover {

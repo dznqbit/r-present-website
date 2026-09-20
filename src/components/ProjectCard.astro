@@ -1,0 +1,95 @@
+---
+interface Props {
+  id: string;
+  name: string;
+  description: string;
+  images: { url: string; description: string }[];
+}
+
+const { id, name, description, images } = Astro.props;
+const thumbnail = images[0]?.url || "/placeholder.jpg";
+---
+
+<article class="project-card">
+  <a href={`/projects/${id}`}>
+    <div class="image-container">
+      <img src={thumbnail} alt={images[0]?.description || name} loading="lazy" />
+    </div>
+    <div class="project-info">
+      <h3>{name}</h3>
+      <p class="description">{description}</p>
+    </div>
+  </a>
+</article>
+
+<style>
+  .project-card {
+    border-radius: 12px;
+    overflow: hidden;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .project-card:hover {
+    text-decoration: underline;
+  }
+
+  .project-card a {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+
+  .image-container {
+    aspect-ratio: 21 / 9;
+    background: #f5f5f5;
+    overflow: hidden;
+    border-radius: 12px;
+  }
+
+  .image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .project-info {
+    padding: 2rem 0.5rem;
+  }
+
+  h3 {
+    margin: 0 0 0.75rem 0;
+    font-size: 2rem;
+  }
+
+  .description {
+    margin: 0;
+    max-width: 65ch;
+    color: #666;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  @media (max-width: 768px) {
+    .image-container {
+      aspect-ratio: 4 / 3;
+    }
+
+    .project-info {
+      padding: 1.5rem 0;
+    }
+
+    h3 {
+      font-size: 1.5rem;
+    }
+
+    .description {
+      font-size: 1rem;
+    }
+  }
+</style>

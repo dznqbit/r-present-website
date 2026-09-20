@@ -1,0 +1,17 @@
+{
+  "name": "Instrumentality",
+  "date": "2026-03-14",
+  "description": "A collection exploring the tools of the trade - pieces cast directly from vintage jeweler's instruments, pliers, and gauges. Each work preserves the texture and wear of the original tool, turning the maker's hand into the subject itself.",
+  "location": "R. Present Studio, Seattle",
+  "images": [
+    {
+      "url": "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=1200&q=80",
+      "description": "Detail shot of a cast pliers pendant, showing the original tool's hinge and wear marks."
+    },
+    {
+      "url": "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=1200&q=80",
+      "description": "Installation view of the Instrumentality collection at R. Present Studio."
+    }
+  ],
+  "products": ["copper-leaf-earrings", "gold-stacking-rings"]
+}

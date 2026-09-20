@@ -4,10 +4,14 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
+  backgroundImageUrl?: string;
 }
 
-const { title, description = "Handcrafted jewelry, made in America" } =
-  Astro.props;
+const {
+  title,
+  description = "Handcrafted jewelry, made in America",
+  backgroundImageUrl = null,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -20,16 +24,18 @@ const { title, description = "Handcrafted jewelry, made in America" } =
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
-  <body>
+  <body style={`--background-image-url: url("${backgroundImageUrl}")`}>
     <header>
       <nav>
         <div>
-          <img src="/images/logo.png" height="64" alt="R. Present" />
+          <a href="/" title="Home"
+            ><img src="/images/logo.png" height="64" alt="R. Present" /></a
+          >
         </div>
         <ul>
           <li><a href="/">Home</a></li>
-          <li><a href="/markets">Upcoming Markets</a></li>
-          <li><a href="/categories">Shop</a></li>
+          <li><a href="/projects">Projects</a></li>
+          <li><a href="/categories">Merch</a></li>
           <li><a href="/about">About</a></li>
         </ul>
       </nav>
@@ -54,10 +60,10 @@ const { title, description = "Handcrafted jewelry, made in America" } =
 
 <style>
   body {
-    background-image: url("images/background.jpg");
-    background-size: 100% auto;
-    background-repeat: no-repeat;
-    background-position: top center;
+    background-image: var(--background-image-url);
+    background-size: 50% auto;
+    background-repeat: repeat-y;
+    background-position: top left;
   }
 
   header {

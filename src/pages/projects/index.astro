@@ -1,0 +1,60 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import { getCollection } from "astro:content";
+
+const projects = await getCollection("projects");
+const recentProjects = projects
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 10);
+---
+
+<BaseLayout
+  title="Projects - R. Present"
+  description="Art exhibitions and merchandise collections from R. Present"
+>
+  <h1>Projects</h1>
+
+  {
+    recentProjects.length > 0 ? (
+      <div class="projects-grid">
+        {recentProjects.map((project) => (
+          <ProjectCard id={project.id} {...project.data} />
+        ))}
+      </div>
+    ) : (
+      <p class="no-projects">No projects yet. Check back soon!</p>
+    )
+  }
+</BaseLayout>
+
+<style>
+  h1 {
+    font-size: 2.5rem;
+    margin: 0 0 2rem 0;
+  }
+
+  .projects-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+    margin-bottom: 3rem;
+  }
+
+  .no-projects {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-size: 1.125rem;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    .projects-grid {
+      gap: 3rem;
+    }
+  }
+</style>

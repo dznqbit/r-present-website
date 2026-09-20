@@ -7,7 +7,7 @@ const products = await getCollection("products");
 const categories = [...new Set(products.map((p) => p.data.category))].sort();
 ---
 
-<BaseLayout title="R. Present - Handcrafted Jewelry">
+<BaseLayout title="R. Present - Handcrafted Jewelry" backgroundImageUrl="/images/background.jpg">
   <section class="hero">
     <h1>R. Present</h1>
     <p class="tagline">Handcrafted jewelry, made in America</p>

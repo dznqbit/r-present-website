@@ -13,7 +13,11 @@ const thumbnail = images[0]?.url || "/placeholder.jpg";
 <article class="project-card">
   <a href={`/projects/${id}`}>
     <div class="image-container">
-      <img src={thumbnail} alt={images[0]?.description || name} loading="lazy" />
+      <img
+        src={thumbnail}
+        alt={images[0]?.description || name}
+        loading="lazy"
+      />
     </div>
     <div class="project-info">
       <h3>{name}</h3>

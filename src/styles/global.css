@@ -1,0 +1,86 @@
+@font-face {
+  font-family: "Amatic SC";
+  src: url("/fonts/AmaticSC-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Amatic SC";
+  src: url("/fonts/AmaticSC-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Averia Libre";
+  src: url("/fonts/AveriaLibre-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Averia Libre";
+  src: url("/fonts/AveriaLibre-LightItalic.ttf") format("truetype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Averia Libre";
+  src: url("/fonts/AveriaLibre-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Averia Libre";
+  src: url("/fonts/AveriaLibre-Italic.ttf") format("truetype");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Averia Libre";
+  src: url("/fonts/AveriaLibre-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Averia Libre";
+  src: url("/fonts/AveriaLibre-BoldItalic.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+html {
+  font-family: "Averia Libre", system-ui, sans-serif;
+  background: #ffffff;
+  color: #333;
+}
+
+h1,
+h2 {
+  font-family: "Amatic SC", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+* {
+  box-sizing: border-box;
+}

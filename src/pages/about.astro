@@ -7,32 +7,38 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   description="Independent jeweler creating handcrafted jewelry, made in America"
 >
   <article class="about-content">
-    <h1>About R. Present</h1>
+    <section class="intro col-container">
+      <div class="col-1">
+        <img src="/images/artist.jpg" alt="About the artist" />
+      </div>
+      <div class="col-2">
+        <p>
+          Hi, this is R.<br />
+          Welcome to my Art Project, coping mechanism, side hustle, hobby, time, money,
+          and energy investment sample register.
+        </p>
+        <p>
+          Seattle, 2024; what began as a quiet exploration evolved through
+          jewelry school @PRATT, and many looong hours of experimentation at my
+          little home studio, a space where ideas take shape.
+        </p>
+        <p>
+          Tons of local markets, many unique individual pieces, and looots of
+          human support; today, an artistic collective, @Siderail, welcomed me
+          to nourish and inspire my practice, and I'll keep going.
+        </p>
+        <p>
+          Jewelry, for me, is a form of <strong>representation</strong>: every
+          piece is a little story, a feeling, a <em>fragment of identity</em>.
+        </p>
 
-    <section class="intro">
-      <p>
-        Welcome to R. Present, where each piece of jewelry is handcrafted with
-        care and attention to detail. As an independent jeweler, we take pride
-        in creating unique pieces that tell a story.
-      </p>
-    </section>
+        <p>
+          Love,<br />
+          Rhina Navas,<br />R.
+        </p>
 
-    <section>
-      <h2>Made in America</h2>
-      <p>
-        Every piece is designed and crafted right here in the United States,
-        supporting local craftsmanship and ensuring the highest quality
-        materials and techniques.
-      </p>
-    </section>
-
-    <section>
-      <h2>Our Craft</h2>
-      <p>
-        We believe in the beauty of handmade items. Each piece is unique,
-        carrying the marks of the hand that created it. This authenticity is
-        what makes handcrafted jewelry special and personal.
-      </p>
+        <h2>r.Presenting!!!!</h2>
+      </div>
     </section>
 
     <section>
@@ -51,8 +57,25 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 
 <style>
   .about-content {
-    max-width: 800px;
     margin: 0 auto;
+  }
+
+  .col-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    max-width: 100%;
+  }
+
+  .col-container .col-1 {
+    flex-basis: 45%;
+  }
+
+  .col-container .col-1 img {
+    width: 100%;
+  }
+  .col-container .col-2 {
+    flex-basis: 45%;
   }
 
   h1 {
@@ -63,12 +86,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   h2 {
     font-size: 1.75rem;
     margin: 2rem 0 1rem 0;
-  }
-
-  .intro {
-    font-size: 1.25rem;
-    line-height: 1.6;
-    margin-bottom: 2rem;
   }
 
   section {
@@ -102,12 +119,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
   }
 
   @media (max-width: 768px) {
-    h1 {
-      font-size: 2rem;
-    }
-
-    .intro {
-      font-size: 1.125rem;
+    .col-container {
+      display: block;
     }
   }
 </style>

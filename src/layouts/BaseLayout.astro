@@ -1,4 +1,6 @@
 ---
+import "../styles/global.css";
+
 interface Props {
   title: string;
   description?: string;
@@ -21,7 +23,9 @@ const { title, description = "Handcrafted jewelry, made in America" } =
   <body>
     <header>
       <nav>
-        <a href="/" class="logo">R. Present</a>
+        <div>
+          <img src="/images/logo.png" height="64" alt="R. Present" />
+        </div>
         <ul>
           <li><a href="/">Home</a></li>
           <li><a href="/markets">Upcoming Markets</a></li>
@@ -49,96 +53,7 @@ const { title, description = "Handcrafted jewelry, made in America" } =
 </html>
 
 <style>
-  @font-face {
-    font-family: "Amatic SC";
-    src: url("/fonts/AmaticSC-Regular.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Amatic SC";
-    src: url("/fonts/AmaticSC-Bold.ttf") format("truetype");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Averia Libre";
-    src: url("/fonts/AveriaLibre-Light.ttf") format("truetype");
-    font-weight: 300;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Averia Libre";
-    src: url("/fonts/AveriaLibre-LightItalic.ttf") format("truetype");
-    font-weight: 300;
-    font-style: italic;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Averia Libre";
-    src: url("/fonts/AveriaLibre-Regular.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Averia Libre";
-    src: url("/fonts/AveriaLibre-Italic.ttf") format("truetype");
-    font-weight: 400;
-    font-style: italic;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Averia Libre";
-    src: url("/fonts/AveriaLibre-Bold.ttf") format("truetype");
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-  }
-
-  @font-face {
-    font-family: "Averia Libre";
-    src: url("/fonts/AveriaLibre-BoldItalic.ttf") format("truetype");
-    font-weight: 700;
-    font-style: italic;
-    font-display: swap;
-  }
-
-  :global(html) {
-    font-family: "Averia Libre", system-ui, sans-serif;
-    background: #ffffff;
-    color: #333;
-  }
-
-  :global(h1),
-  :global(h2) {
-    font-family: "Amatic SC", system-ui, sans-serif;
-  }
-
-  :global(body) {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  :global(*) {
-    box-sizing: border-box;
-  }
-
   header {
-    background: #f8f8f8;
-    border-bottom: 1px solid #e0e0e0;
     padding: 1rem;
   }
 
@@ -157,6 +72,7 @@ const { title, description = "Handcrafted jewelry, made in America" } =
     font-weight: bold;
     color: #333;
     text-decoration: none;
+    background-image: url("/images/logo.png");
   }
 
   nav ul {

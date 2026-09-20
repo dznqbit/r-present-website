@@ -90,8 +90,7 @@ const {
       cursorImage.src = ACTIVE_CURSOR_SRC;
 
       if (impact && impactImage) {
-        const src =
-          IMPACT_SRCS[Math.floor(Math.random() * IMPACT_SRCS.length)];
+        const src = IMPACT_SRCS[Math.floor(Math.random() * IMPACT_SRCS.length)];
 
         impactImage.src = src;
         impact.style.left = `${event.clientX}px`;

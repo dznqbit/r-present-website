@@ -1,41 +1,34 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProductCard from "../../components/ProductCard.astro";
 import { getCollection } from "astro:content";
 
 const products = await getCollection("products");
-const categories = [...new Set(products.map((p) => p.data.category))].sort();
-
-// Count products per category
-const categoryCount = products.reduce(
-  (acc, product) => {
-    const cat = product.data.category;
-    acc[cat] = (acc[cat] || 0) + 1;
-    return acc;
-  },
-  {} as Record<string, number>,
+const sortedProducts = products.sort(
+  (a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime(),
 );
 ---
 
-<BaseLayout title="Shop by Category - R. Present">
-  <h1>Shop by Category</h1>
-
-  <div class="categories-grid">
+<BaseLayout title="Shop - R. Present">
+  <div class="products-grid">
     {
-      categories.map((category) => (
-        <a href={`/categories/${category}`} class="category-card">
-          <h2>{category}</h2>
-          <p>
-            {categoryCount[category]}{" "}
-            {categoryCount[category] === 1 ? "item" : "items"}
-          </p>
-        </a>
+      sortedProducts.map((product) => (
+        <ProductCard
+          sku={product.id}
+          name={product.data.name}
+          category={product.data.category}
+          description={product.data.description}
+          available={product.data.available}
+          images={product.data.images}
+          price={product.data.price}
+        />
       ))
     }
   </div>
 
   {
-    categories.length === 0 && (
-      <p class="no-categories">No products available yet. Check back soon!</p>
+    sortedProducts.length === 0 && (
+      <p class="no-products">No products available yet. Check back soon!</p>
     )
   }
 </BaseLayout>
@@ -46,42 +39,13 @@ const categoryCount = products.reduce(
     margin: 0 0 2rem 0;
   }
 
-  .categories-grid {
+  .products-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
   }
 
-  .category-card {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 2rem;
-    text-decoration: none;
-    color: inherit;
-    background: #fafafa;
-    text-align: center;
-    transition:
-      transform 0.2s,
-      box-shadow 0.2s;
-  }
-
-  .category-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-
-  .category-card h2 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
-    text-transform: capitalize;
-  }
-
-  .category-card p {
-    margin: 0;
-    color: #666;
-  }
-
-  .no-categories {
+  .no-products {
     text-align: center;
     padding: 3rem;
     color: #666;
@@ -93,8 +57,8 @@ const categoryCount = products.reduce(
       font-size: 2rem;
     }
 
-    .categories-grid {
-      grid-template-columns: 1fr;
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
   }
 </style>

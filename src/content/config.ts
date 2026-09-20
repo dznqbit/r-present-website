@@ -10,6 +10,8 @@ const products = defineCollection({
     description: z.string(),
     available: z.boolean(),
     images: z.array(z.string().url()),
+    price: z.number().positive().optional(),
+    buyLinkUrl: z.string().optional(),
   }),
 });
 

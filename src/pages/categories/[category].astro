@@ -38,8 +38,10 @@ const sortedProducts = products.sort(
           sku={product.id}
           name={product.data.name}
           category={product.data.category}
+          description={product.data.description}
           available={product.data.available}
           images={product.data.images}
+          price={product.data.price}
         />
       ))
     }

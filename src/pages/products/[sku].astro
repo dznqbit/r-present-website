@@ -12,8 +12,15 @@ export async function getStaticPaths() {
 }
 
 const { product } = Astro.props;
-const { name, category, description, available, images, createdAt } =
-  product.data;
+const {
+  name,
+  category,
+  description,
+  available,
+  images,
+  createdAt,
+  buyLinkUrl,
+} = product.data;
 ---
 
 <BaseLayout title={`${name} - R. Present`} description={description}>
@@ -26,7 +33,6 @@ const { name, category, description, available, images, createdAt } =
       <div class="product-images">
         <div class="main-image">
           <img src={images[0]} alt={name} />
-          {!available && <span class="sold-badge">Sold</span>}
         </div>
 
         {
@@ -58,10 +64,21 @@ const { name, category, description, available, images, createdAt } =
         <div class="availability">
           {
             available ? (
-              <p class="available">
-                <strong>Available</strong> - Find us at an{" "}
-                <a href="/markets">upcoming market</a>
-              </p>
+              buyLinkUrl ? (
+                <a
+                  href={buyLinkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="buy-link"
+                >
+                  Buy Now
+                </a>
+              ) : (
+                <p class="available">
+                  <strong>Available</strong> - Find us at an{" "}
+                  <a href="/markets">upcoming market</a>
+                </p>
+              )
             ) : (
               <p class="sold-out">
                 <strong>Sold</strong>
@@ -128,18 +145,6 @@ const { name, category, description, available, images, createdAt } =
     width: 100%;
     height: 100%;
     object-fit: cover;
-  }
-
-  .sold-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    padding: 0.75rem 1.5rem;
-    border-radius: 4px;
-    font-size: 1rem;
-    font-weight: bold;
   }
 
   .thumbnail-grid {
@@ -211,6 +216,21 @@ const { name, category, description, available, images, createdAt } =
   .available a {
     color: #2d5f2e;
     text-decoration: underline;
+  }
+
+  .buy-link {
+    display: inline-block;
+    background: #1a1a1a;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.75rem 2rem;
+    border-radius: 4px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+  }
+
+  .buy-link:hover {
+    background: #333;
   }
 
   .sold-out {

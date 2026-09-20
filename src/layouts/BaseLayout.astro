@@ -90,6 +90,7 @@ const {
     });
 
     document.addEventListener("mousedown", (event) => {
+      event.preventDefault();
       cursorImage.src = ACTIVE_CURSOR_SRC;
 
       if (impact && impactImage) {
@@ -140,6 +141,8 @@ const {
     z-index: 9999;
     opacity: 0;
     transform: translate(calc(-1 * var(--tip-x)), calc(-1 * var(--tip-y)));
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   #hammer-cursor.is-visible {
@@ -162,6 +165,8 @@ const {
     z-index: 9998;
     transform: translate(-50%, -50%);
     opacity: 0;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   #hammer-impact.is-visible {

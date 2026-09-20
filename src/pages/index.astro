@@ -16,6 +16,10 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
     <p class="tagline">Handcrafted jewelry, made in America</p>
   </section>
 
+  <section class="collection">
+    <h1>Mod bodies</h1>
+  </section>
+
   <section class="quick-links">
     <div class="link-card">
       <h2>Upcoming Markets</h2>
@@ -42,7 +46,6 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
 <style>
   .hero {
     text-align: center;
-    height: 400vh;
     padding: 3rem 0;
     border-bottom: 1px solid #e0e0e0;
     margin-bottom: 3rem;
@@ -53,6 +56,12 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
     font-size: 3rem;
     margin: 0 0 1rem 0;
     font-weight: 300;
+  }
+
+  .collection {
+    border: 2px solid black;
+    margin: 40px 0;
+    padding: 20px;
   }
 
   .tagline {

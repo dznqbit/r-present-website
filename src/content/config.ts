@@ -18,6 +18,7 @@ const markets = defineCollection({
   schema: z.object({
     name: z.string(),
     date: z.coerce.date(),
+    timeDescription: z.string(),
     location: z.string(),
     address: z.string().optional(),
     url: z.string().url().optional(),

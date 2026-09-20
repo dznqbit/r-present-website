@@ -1,4 +1,6 @@
 ---
+import "../styles/global.css";
+
 interface Props {
   title: string;
   description?: string;
@@ -21,7 +23,9 @@ const { title, description = "Handcrafted jewelry, made in America" } =
   <body>
     <header>
       <nav>
-        <a href="/" class="logo">R. Present</a>
+        <div>
+          <img src="/images/logo.png" height="64" alt="R. Present" />
+        </div>
         <ul>
           <li><a href="/">Home</a></li>
           <li><a href="/markets">Upcoming Markets</a></li>
@@ -49,27 +53,14 @@ const { title, description = "Handcrafted jewelry, made in America" } =
 </html>
 
 <style>
-  :global(html) {
-    font-family: system-ui, sans-serif;
-    background: #ffffff;
-    color: #333;
-  }
-
-  :global(body) {
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  :global(*) {
-    box-sizing: border-box;
+  body {
+    background-image: url("images/background.jpg");
+    background-size: 100% auto;
+    background-repeat: no-repeat;
+    background-position: top center;
   }
 
   header {
-    background: #f8f8f8;
-    border-bottom: 1px solid #e0e0e0;
     padding: 1rem;
   }
 
@@ -88,6 +79,7 @@ const { title, description = "Handcrafted jewelry, made in America" } =
     font-weight: bold;
     color: #333;
     text-decoration: none;
+    background-image: url("/images/logo.png");
   }
 
   nav ul {

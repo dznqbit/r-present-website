@@ -1,0 +1,93 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Style Guide - R. Present"
+  description="Reference page for R. Present's typography and design language"
+>
+  <article class="style-guide">
+    <h1>Style Guide</h1>
+    <p>
+      A reference page for the type and text elements used across the site. This
+      page isn't linked from the main navigation — it's a working document for
+      building out the site's theme.
+    </p>
+
+    <section>
+      <h2>Headings</h2>
+      <h1>Heading 1</h1>
+      <h2>Heading 2</h2>
+      <h3>Heading 3</h3>
+      <h4>Heading 4</h4>
+      <h5>Heading 5</h5>
+      <h6>Heading 6</h6>
+    </section>
+
+    <section>
+      <h2>Paragraphs</h2>
+      <p>
+        This is a standard paragraph. Handcrafted jewelry, made in America —
+        each piece is designed and finished by hand, so no two are exactly
+        alike. This block of text is here to check line height, measure, and
+        color at a normal reading size.
+      </p>
+      <p class="muted">
+        This is muted text, used for secondary details like dates, locations, or
+        captions.
+      </p>
+    </section>
+
+    <section>
+      <h2>Links</h2>
+      <p><a href="/">A standard inline link</a></p>
+      <p><a href="/markets" class="button">A button-style link</a></p>
+    </section>
+
+    <section>
+      <h2>Lists</h2>
+      <ul>
+        <li>Unordered list item one</li>
+        <li>Unordered list item two</li>
+        <li>Unordered list item three</li>
+      </ul>
+      <ol>
+        <li>Ordered list item one</li>
+        <li>Ordered list item two</li>
+        <li>Ordered list item three</li>
+      </ol>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .style-guide {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .style-guide section {
+    margin: 3rem 0;
+    padding-top: 2rem;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .muted {
+    color: #666;
+    font-size: 0.9rem;
+  }
+
+  .button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #333;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: bold;
+  }
+
+  .button:hover {
+    background: #555;
+  }
+</style>

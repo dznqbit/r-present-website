@@ -1,0 +1,157 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { getCollection, getEntry } from "astro:content";
+
+export async function getStaticPaths() {
+  const projects = await getCollection("projects");
+
+  return projects.map((project) => ({
+    params: { id: project.id },
+    props: { project },
+  }));
+}
+
+const { project } = Astro.props;
+const { name, date, description, images, location, products } = project.data;
+
+const relatedProducts = products
+  ? await Promise.all(products.map((ref) => getEntry(ref)))
+  : [];
+---
+
+<BaseLayout title={`${name} - R. Present`} description={description}>
+  <article class="project-detail">
+    <a href="/projects" class="back-link">&larr; Back to Projects</a>
+
+    <h1>{name}</h1>
+    <p class="meta">
+      {
+        new Intl.DateTimeFormat("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }).format(date)
+      }
+      {location && <> &middot; {location}</>}
+    </p>
+
+    <p class="description">{description}</p>
+
+    <div class="image-gallery">
+      {
+        images.map((image) => (
+          <figure>
+            <img src={image.url} alt={image.description} loading="lazy" />
+            <figcaption>{image.description}</figcaption>
+          </figure>
+        ))
+      }
+    </div>
+
+    {
+      relatedProducts.length > 0 && (
+        <div class="related-products">
+          <h2>Featured Pieces</h2>
+          <div class="related-products-grid">
+            {relatedProducts.map((product) => (
+              <a href={`/products/${product.id}`} class="related-product">
+                <img src={product.data.images[0]} alt={product.data.name} />
+                <span>{product.data.name}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style>
+  .project-detail {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .back-link {
+    display: inline-block;
+    color: #666;
+    text-decoration: none;
+    margin-bottom: 2rem;
+  }
+
+  .back-link:hover {
+    color: #333;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .meta {
+    color: #666;
+    margin: 0 0 2rem 0;
+  }
+
+  .description {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: #444;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .image-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  .image-gallery img {
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  figcaption {
+    margin-top: 0.5rem;
+    color: #666;
+    font-size: 0.875rem;
+  }
+
+  .related-products h2 {
+    font-size: 1.5rem;
+    margin: 0 0 1rem 0;
+  }
+
+  .related-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+  }
+
+  .related-product {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .related-product img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .related-product span {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+  }
+</style>

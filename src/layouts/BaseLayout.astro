@@ -4,10 +4,14 @@ import "../styles/global.css";
 interface Props {
   title: string;
   description?: string;
+  backgroundImageUrl?: string;
 }
 
-const { title, description = "Handcrafted jewelry, made in America" } =
-  Astro.props;
+const {
+  title,
+  description = "Handcrafted jewelry, made in America",
+  backgroundImageUrl = null,
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -20,16 +24,23 @@ const { title, description = "Handcrafted jewelry, made in America" } =
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" href="/favicon.png" />
   </head>
-  <body>
+  <body style={`--background-image-url: url("${backgroundImageUrl}")`}>
+    <div id="hammer-cursor">
+      <img src="/images/hammer.png" alt="" />
+    </div>
+    <div id="hammer-impact"><img src="" alt="" /></div>
+
     <header>
       <nav>
         <div>
-          <img src="/images/logo.png" height="64" alt="R. Present" />
+          <a href="/" title="Home"
+            ><img src="/images/logo.png" height="64" alt="R. Present" /></a
+          >
         </div>
         <ul>
           <li><a href="/">Home</a></li>
-          <li><a href="/markets">Upcoming Markets</a></li>
-          <li><a href="/categories">Shop</a></li>
+          <li><a href="/projects">Projects</a></li>
+          <li><a href="/categories">Merch</a></li>
           <li><a href="/about">About</a></li>
         </ul>
       </nav>
@@ -52,12 +63,110 @@ const { title, description = "Handcrafted jewelry, made in America" } =
   </body>
 </html>
 
+<script>
+  const DEFAULT_CURSOR_SRC = "/images/hammer.png";
+  const ACTIVE_CURSOR_SRC = "/images/hammer-strike.png";
+  const IMPACT_SRCS = [
+    "/images/strike-1.png",
+    "/images/strike-2.png",
+    "/images/strike-3.png",
+    "/images/strike-4.png",
+  ];
+  const IMPACT_DURATION_MS = 200;
+
+  const cursor = document.getElementById("hammer-cursor");
+  const cursorImage = cursor?.querySelector("img");
+  const impact = document.getElementById("hammer-impact");
+  const impactImage = impact?.querySelector("img");
+  let impactTimeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  if (cursor && cursorImage) {
+    document.addEventListener("mousemove", (event) => {
+      cursor.style.left = `${event.clientX}px`;
+      cursor.style.top = `${event.clientY}px`;
+    });
+
+    document.addEventListener("mousedown", (event) => {
+      cursorImage.src = ACTIVE_CURSOR_SRC;
+
+      if (impact && impactImage) {
+        const src = IMPACT_SRCS[Math.floor(Math.random() * IMPACT_SRCS.length)];
+
+        impactImage.src = src;
+        impact.style.left = `${event.clientX}px`;
+        impact.style.top = `${event.clientY}px`;
+        impact.classList.add("is-visible");
+
+        clearTimeout(impactTimeoutId);
+        impactTimeoutId = setTimeout(() => {
+          impact.classList.remove("is-visible");
+        }, IMPACT_DURATION_MS);
+      }
+    });
+
+    document.addEventListener("mouseup", () => {
+      cursorImage.src = DEFAULT_CURSOR_SRC;
+    });
+  }
+</script>
+
 <style>
+  body,
+  a,
+  button {
+    cursor: none;
+  }
+
+  #hammer-cursor {
+    /* hammer.png is 800x1400; the striking face sits ~77% across, ~16% down */
+    --cursor-height: 120px;
+    --cursor-width: calc(var(--cursor-height) * 800 / 1400);
+    --tip-x: calc(var(--cursor-width) * 0.2);
+    --tip-y: calc(var(--cursor-height) * 0.2);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--cursor-width);
+    height: var(--cursor-height);
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(calc(-1 * var(--tip-x)), calc(-1 * var(--tip-y)));
+  }
+
+  #hammer-cursor img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  #hammer-impact {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 60px;
+    height: 60px;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+  }
+
+  #hammer-impact.is-visible {
+    opacity: 1;
+  }
+
+  #hammer-impact img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
   body {
-    background-image: url("images/background.jpg");
-    background-size: 100% auto;
-    background-repeat: no-repeat;
-    background-position: top center;
+    background-image: var(--background-image-url);
+    background-size: 50% auto;
+    background-repeat: repeat-y;
+    background-position: top left;
   }
 
   header {

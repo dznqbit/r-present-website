@@ -34,7 +34,7 @@ const {
       <nav>
         <div>
           <a href="/" title="Home"
-            ><img src="/images/logo.png" height="64" alt="R. Present" /></a
+            ><img src="/images/logo.png" height="72" alt="R. Present" /></a
           >
         </div>
         <ul>
@@ -80,10 +80,13 @@ const {
   const impactImage = impact?.querySelector("img");
   let impactTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
+  const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+
   if (cursor && cursorImage) {
     document.addEventListener("mousemove", (event) => {
       cursor.style.left = `${event.clientX}px`;
       cursor.style.top = `${event.clientY}px`;
+      cursor.classList.add("is-visible");
     });
 
     document.addEventListener("mousedown", (event) => {
@@ -106,6 +109,10 @@ const {
 
     document.addEventListener("mouseup", () => {
       cursorImage.src = DEFAULT_CURSOR_SRC;
+
+      if (isCoarsePointer) {
+        cursor.classList.remove("is-visible");
+      }
     });
   }
 </script>
@@ -131,7 +138,12 @@ const {
     height: var(--cursor-height);
     pointer-events: none;
     z-index: 9999;
+    opacity: 0;
     transform: translate(calc(-1 * var(--tip-x)), calc(-1 * var(--tip-y)));
+  }
+
+  #hammer-cursor.is-visible {
+    opacity: 1;
   }
 
   #hammer-cursor img {
@@ -163,10 +175,6 @@ const {
   }
 
   body {
-    background-image: var(--background-image-url);
-    background-size: 50% auto;
-    background-repeat: repeat-y;
-    background-position: top left;
   }
 
   header {
@@ -209,6 +217,11 @@ const {
   }
 
   main {
+    background-image: var(--background-image-url);
+    background-size: 50em;
+    background-repeat: repeat-y;
+    background-position: 0em 0em;
+
     flex: 1;
     max-width: 1200px;
     width: 100%;
@@ -246,6 +259,10 @@ const {
     nav ul {
       flex-wrap: wrap;
       gap: 1rem;
+    }
+
+    main {
+      background-size: 20em;
     }
   }
 </style>

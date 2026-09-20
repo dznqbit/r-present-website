@@ -1,7 +1,7 @@
-import { defineCollection, z } from "astro:content";
+import { defineCollection, z } from 'astro:content';
 
 const products = defineCollection({
-  type: "data",
+  type: 'data',
   schema: z.object({
     sku: z.string(),
     createdAt: z.coerce.date(),
@@ -14,10 +14,11 @@ const products = defineCollection({
 });
 
 const markets = defineCollection({
-  type: "data",
+  type: 'data',
   schema: z.object({
     name: z.string(),
     date: z.coerce.date(),
+    timeDescription: z.string(),
     location: z.string(),
     address: z.string().optional(),
     url: z.string().url().optional(),

@@ -168,6 +168,7 @@ function App() {
               key={`${collection.name}/${creating ? '+new' : selected?.id}`}
               collection={collection.name}
               schema={collection.schema}
+              hidden={collection.writeOnce}
               entry={creating ? null : (selected ?? null)}
               onSaved={onSaved}
               onDeleted={onDeleted}

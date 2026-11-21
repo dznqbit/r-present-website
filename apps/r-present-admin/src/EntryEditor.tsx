@@ -5,6 +5,8 @@ import { fieldsFor, fromDraft, toDraft, type Draft, type Field } from './fields'
 type Props = {
   collection: string
   schema: JsonSchema
+  /** Fields the server manages (e.g. createdAt); kept out of the form. */
+  hidden: string[]
   /** null = creating a new entry. */
   entry: Entry | null
   onSaved: (entry: Entry, created: boolean) => void
@@ -32,7 +34,6 @@ function defaultsFor(schema: JsonSchema): EntryData {
   const data: EntryData = {}
   const props = schema.properties ?? {}
   if (props.available?.type === 'boolean') data.available = true
-  if ('createdAt' in props) data.createdAt = new Date().toISOString().slice(0, 10)
   return data
 }
 
@@ -41,6 +42,7 @@ const singular = (collection: string) => collection.replace(/s$/, '')
 export function EntryEditor({
   collection,
   schema,
+  hidden,
   entry,
   onSaved,
   onDeleted,
@@ -48,65 +50,69 @@ export function EntryEditor({
 }: Props) {
   const creating = entry === null
   const startData = useMemo(() => entry?.data ?? defaultsFor(schema), [entry, schema])
-  const fields = useMemo(() => fieldsFor(schema, startData), [schema, startData])
+  const fields = useMemo(
+    () => fieldsFor(schema, startData).filter((f) => !hidden.includes(f.name)),
+    [schema, startData, hidden],
+  )
   const initial = useMemo(() => toDraft(fields, startData), [fields, startData])
+  const nameField = fields.find((f) => f.name === 'name')
+  // Name always comes first; the rest keep schema order.
+  const orderedFields = nameField ? [nameField, ...fields.filter((f) => f !== nameField)] : fields
   const hasSku = fields.some((f) => f.name === 'sku')
 
   const [draft, setDraft] = useState<Draft>(initial)
-  const [id, setId] = useState(entry?.id ?? '')
-  // Until she types in these herself, the id follows the name and the sku follows the id.
-  const [idTouched, setIdTouched] = useState(false)
+  // For new products the sku follows the name until she types in it herself.
   const [skuTouched, setSkuTouched] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
 
+  const name = typeof draft.name === 'string' ? draft.name : ''
+  // The file name is plumbing she never sees: new entries get it from the name.
+  const id = entry?.id ?? slugify(name)
   const dirty = creating || JSON.stringify(draft) !== JSON.stringify(initial)
 
-  const apply = (next: Draft, nextId: string) => {
+  const clearError = (field: string) =>
+    setErrors((errs) => {
+      if (!(field in errs)) return errs
+      const { [field]: _cleared, ...rest } = errs
+      return rest
+    })
+
+  const update = (field: string, value: string | boolean) => {
+    clearError(field)
+    if (field === 'sku') setSkuTouched(true)
+    let next = { ...draft, [field]: value }
+    if (creating && field === 'name' && hasSku && !skuTouched && typeof value === 'string') {
+      next = { ...next, sku: slugify(value) }
+    }
     setDraft(next)
-    setId(nextId)
     setStatus({ kind: 'idle' })
     onDirtyChange(creating || JSON.stringify(next) !== JSON.stringify(initial))
   }
 
-  const syncSku = (next: Draft, nextId: string): Draft =>
-    creating && hasSku && !skuTouched ? { ...next, sku: nextId } : next
+  /** Server errors about the (hidden) id belong to the name field. */
+  const toFieldErrors = (list: { field: string; message: string }[]) =>
+    Object.fromEntries(list.map((fe) => [fe.field === 'id' ? 'name' : fe.field, fe.message]))
 
-  const clearError = (name: string) =>
-    setErrors((errs) => {
-      if (!(name in errs)) return errs
-      const { [name]: _cleared, ...rest } = errs
-      return rest
+  /** Bring the first problem into view so "Fix the highlighted fields" isn't a hunt. */
+  const showFirstError = () =>
+    window.requestAnimationFrame(() => {
+      const el = document.querySelector<HTMLElement>(
+        '.editor .has-error input, .editor .has-error textarea',
+      )
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el?.focus({ preventScroll: true })
     })
-
-  const update = (name: string, value: string | boolean) => {
-    clearError(name)
-    if (name === 'sku') setSkuTouched(true)
-    let next = { ...draft, [name]: value }
-    let nextId = id
-    if (creating && name === 'name' && !idTouched && typeof value === 'string') {
-      nextId = slugify(value)
-      next = syncSku(next, nextId)
-    }
-    apply(next, nextId)
-  }
-
-  const updateId = (value: string) => {
-    clearError('id')
-    setIdTouched(true)
-    // Light-touch cleanup while typing (slugify would eat a trailing dash mid-word).
-    const nextId = value.toLowerCase().replace(/[^a-z0-9_-]/g, '-')
-    apply(syncSku(draft, nextId), nextId)
-  }
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault()
     const result = fromDraft(fields, draft, entry?.data ?? {})
     const clientErrors = 'errors' in result ? { ...result.errors } : {}
-    if (creating && !id) clientErrors.id = 'needs a name'
-    if (Object.keys(clientErrors).length > 0 || 'errors' in result) {
+    if (creating && name.trim() && !id) clientErrors.name = 'needs at least one letter or number'
+    if ('errors' in result || Object.keys(clientErrors).length > 0) {
       setErrors(clientErrors)
       setStatus({ kind: 'error', message: 'Fix the highlighted fields.' })
+      showFirstError()
       return
     }
     setErrors({})
@@ -120,8 +126,9 @@ export function EntryEditor({
       onSaved(saved, creating)
     } catch (err) {
       if (err instanceof ApiError && err.errors.length > 0) {
-        setErrors(Object.fromEntries(err.errors.map((fe) => [fe.field, fe.message])))
+        setErrors(toFieldErrors(err.errors))
         setStatus({ kind: 'error', message: 'Fix the highlighted fields.' })
+        showFirstError()
       } else {
         setStatus({ kind: 'error', message: err instanceof Error ? err.message : String(err) })
       }
@@ -130,10 +137,8 @@ export function EntryEditor({
 
   const remove = async () => {
     if (!entry) return
-    const label = typeof entry.data.name === 'string' ? entry.data.name : entry.id
-    const ok = window.confirm(
-      `Delete "${label}"?\n\nIt stays on r-present.com until you publish.`,
-    )
+    const label = typeof entry.data.name === 'string' ? entry.data.name : 'this'
+    const ok = window.confirm(`Delete "${label}"?\n\nIt stays on r-present.com until you publish.`)
     if (!ok) return
     try {
       await api.remove(collection, entry.id)
@@ -144,43 +149,16 @@ export function EntryEditor({
     }
   }
 
-  const title = creating
-    ? (typeof draft.name === 'string' && draft.name) || `New ${singular(collection)}`
-    : typeof entry.data.name === 'string'
-      ? entry.data.name
-      : entry.id
-
   return (
     <form className="editor" onSubmit={save}>
-      <header className="editor-header">
-        <h2>{title}</h2>
-        {!creating && <code>{entry.id}.json</code>}
-      </header>
-
-      {creating && (
-        <div className={`field${errors.id ? ' has-error' : ''}`}>
-          <label htmlFor="field-id">File name</label>
-          <input
-            id="field-id"
-            type="text"
-            value={id}
-            placeholder="fills in from the name"
-            onChange={(e) => updateId(e.target.value)}
-          />
-          <p className="hint">
-            {id ? <code>{id}.json</code> : 'Lowercase letters, numbers and dashes.'} Can't be
-            changed later.
-          </p>
-          {errors.id && <p className="err">{errors.id}</p>}
-        </div>
-      )}
-
-      {fields.map((f) => (
+      {orderedFields.map((f) => (
         <FieldInput
           key={f.name}
           field={f}
           value={draft[f.name] ?? ''}
           error={errors[f.name]}
+          // A new entry starts with the cursor in the name.
+          autoFocus={creating && f === nameField}
           onChange={(v) => update(f.name, v)}
         />
       ))}
@@ -206,10 +184,11 @@ type FieldInputProps = {
   field: Field
   value: string | boolean
   error: string | undefined
+  autoFocus?: boolean
   onChange: (value: string | boolean) => void
 }
 
-function FieldInput({ field, value, error, onChange }: FieldInputProps) {
+function FieldInput({ field, value, error, autoFocus = false, onChange }: FieldInputProps) {
   const id = `field-${field.name}`
   const text = typeof value === 'string' ? value : ''
 
@@ -252,6 +231,7 @@ function FieldInput({ field, value, error, onChange }: FieldInputProps) {
         <input
           id={id}
           type="text"
+          autoFocus={autoFocus}
           inputMode={field.kind === 'number' ? 'decimal' : undefined}
           value={text}
           onChange={(e) => onChange(e.target.value)}

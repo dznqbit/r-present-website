@@ -7,7 +7,12 @@ export type JsonSchema = {
   format?: string
 }
 
-export type Collection = { name: string; schema: JsonSchema }
+export type Collection = {
+  name: string
+  schema: JsonSchema
+  /** Fields the server sets once on create (e.g. createdAt); never shown in forms. */
+  writeOnce: string[]
+}
 export type EntryData = Record<string, unknown>
 export type Entry = { id: string; data: EntryData }
 export type FieldError = { field: string; message: string }

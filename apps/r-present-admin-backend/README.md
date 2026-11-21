@@ -31,6 +31,8 @@ npm run build && npm start
 | GET    | `/api/collections`                           | Collection names + JSON Schemas                         |
 | GET    | `/api/collections/:collection/entries`       | All entries (`{ id, data }`) in a collection            |
 | PUT    | `/api/collections/:collection/entries/:id`   | Validate + overwrite an existing entry (400 w/ `errors`) |
+| POST   | `/api/collections/:collection/entries`       | Create an entry from `{ id, data }` (400 if the id is taken) |
+| DELETE | `/api/collections/:collection/entries/:id`   | Delete an entry's file (goes live on the next publish)  |
 | GET    | `/api/preview`                               | Preview build status (`none`/`building`/`ready`/`failed`, `stale`) |
 | POST   | `/api/preview`                               | Start a preview build (no-op if one is running)         |
 | GET    | `/api/changes`                               | Saved content entries that differ from what's published |

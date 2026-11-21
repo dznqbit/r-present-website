@@ -117,12 +117,17 @@ export function fromDraft(
     }
     const text = typeof raw === 'string' ? raw : ''
     const empty = text.trim() === ''
-    if (empty && !f.required) continue
+    if (empty) {
+      // The schema happily accepts "" for a required string, but a market with
+      // a blank location is never what she meant.
+      if (f.required) errors[f.name] = f.kind === 'lines' ? 'needs at least one' : 'is required'
+      continue
+    }
 
     switch (f.kind) {
       case 'number': {
         const n = Number(text)
-        if (empty || Number.isNaN(n)) errors[f.name] = 'must be a number'
+        if (Number.isNaN(n)) errors[f.name] = 'must be a number'
         else data[f.name] = n
         break
       }

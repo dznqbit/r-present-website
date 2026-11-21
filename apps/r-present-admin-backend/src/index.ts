@@ -1,10 +1,12 @@
 import { serve } from '@hono/node-server'
-import { Hono } from 'hono'
+import { Hono, type Context } from 'hono'
 import { logger } from 'hono/logger'
 import { listChanges } from './changes.js'
 import { config } from './config.js'
 import { initPublishedRef } from './git.js'
 import {
+  createEntry,
+  deleteEntry,
   listCollections,
   listEntries,
   loadSchemas,
@@ -34,20 +36,38 @@ app.get('/collections/:collection/entries', async (c) =>
   c.json(await listEntries(c.req.param('collection'))),
 )
 
-app.put('/collections/:collection/entries/:id', async (c) => {
-  if (isPublishing()) {
-    return c.json({ error: 'Publishing is in progress. Save again in a moment.' }, 409)
-  }
+const busy = 'Publishing is in progress. Try again in a moment.'
+
+async function jsonObject(c: Context): Promise<Record<string, unknown>> {
   const body: unknown = await c.req.json()
   if (typeof body !== 'object' || body === null || Array.isArray(body)) {
     throw new ValidationError([{ field: '(root)', message: 'Body must be a JSON object' }])
   }
-  const entry = await saveEntry(
-    c.req.param('collection'),
-    c.req.param('id'),
-    body as Record<string, unknown>,
-  )
+  return body as Record<string, unknown>
+}
+
+app.put('/collections/:collection/entries/:id', async (c) => {
+  if (isPublishing()) return c.json({ error: busy }, 409)
+  const entry = await saveEntry(c.req.param('collection'), c.req.param('id'), await jsonObject(c))
   return c.json(entry)
+})
+
+// Body: { id, data }
+app.post('/collections/:collection/entries', async (c) => {
+  if (isPublishing()) return c.json({ error: busy }, 409)
+  const body = await jsonObject(c)
+  const { id, data } = body
+  if (typeof id !== 'string' || typeof data !== 'object' || data === null || Array.isArray(data)) {
+    throw new ValidationError([{ field: '(root)', message: 'Body must be { id, data }' }])
+  }
+  const entry = await createEntry(c.req.param('collection'), id, data as Record<string, unknown>)
+  return c.json(entry, 201)
+})
+
+app.delete('/collections/:collection/entries/:id', async (c) => {
+  if (isPublishing()) return c.json({ error: busy }, 409)
+  await deleteEntry(c.req.param('collection'), c.req.param('id'))
+  return c.body(null, 204)
 })
 
 app.get('/changes', async (c) => c.json(await listChanges()))

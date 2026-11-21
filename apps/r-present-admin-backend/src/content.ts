@@ -108,17 +108,49 @@ export async function saveEntry(
   const file = entryPath(collection, id)
   if (!existsSync(file)) throw new NotFoundError(`No ${collection} entry "${id}"`)
 
-  if (!c.validate(data)) throw new ValidationError((c.validate.errors ?? []).map(toFieldError))
-
+  validate(c, data)
   const existing = JSON.parse(await fs.readFile(file, 'utf8')) as Record<string, unknown>
-  const ordered = orderKeys(data, Object.keys(existing), c.schema)
-  const text = await format(JSON.stringify(ordered, null, 2) + '\n', file)
+  return writeEntry(id, file, orderKeys(data, Object.keys(existing), c.schema))
+}
 
+export async function createEntry(
+  collection: string,
+  id: string,
+  data: Record<string, unknown>,
+): Promise<Entry> {
+  const c = getCollection(collection)
+  const file = entryPath(collection, id)
+  if (existsSync(file)) {
+    throw new ValidationError([{ field: 'id', message: `"${id}" is already taken. Pick another name.` }])
+  }
+
+  validate(c, data)
+  return writeEntry(id, file, orderKeys(data, [], c.schema))
+}
+
+export async function deleteEntry(collection: string, id: string): Promise<void> {
+  getCollection(collection)
+  const file = entryPath(collection, id)
+  if (!existsSync(file)) throw new NotFoundError(`No ${collection} entry "${id}"`)
+  await fs.rm(file)
+}
+
+function validate(c: Collection, data: Record<string, unknown>): void {
+  if (!c.validate(data)) throw new ValidationError((c.validate.errors ?? []).map(toFieldError))
+}
+
+async function writeEntry(
+  id: string,
+  file: string,
+  data: Record<string, unknown>,
+): Promise<Entry> {
+  const text = await format(JSON.stringify(data, null, 2) + '\n', file)
+  await fs.mkdir(path.dirname(file), { recursive: true })
   // Write-then-rename so a crash never leaves a half-written file behind.
   const tmp = `${file}.tmp`
   await fs.writeFile(tmp, text)
   await fs.rename(tmp, file)
-  return { id, data: ordered }
+  return { id, data }
 }
 
 function toFieldError(e: ErrorObject): FieldError {

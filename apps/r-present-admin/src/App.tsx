@@ -11,6 +11,7 @@ function App() {
   const [active, setActive] = useState<string | null>(null)
   const [entries, setEntries] = useState<Entry[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [contentVersion, setContentVersion] = useState(0)
   const [changes, setChanges] = useState<Change[]>([])
@@ -56,8 +57,22 @@ function App() {
     action()
   }
 
-  const onSaved = useCallback((saved: Entry) => {
-    setEntries((es) => es.map((e) => (e.id === saved.id ? saved : e)))
+  const onSaved = useCallback((saved: Entry, created: boolean) => {
+    setEntries((es) =>
+      created
+        ? [...es, saved].sort((a, b) => a.id.localeCompare(b.id))
+        : es.map((e) => (e.id === saved.id ? saved : e)),
+    )
+    if (created) {
+      setCreating(false)
+      setSelectedId(saved.id)
+    }
+    setContentVersion((v) => v + 1)
+  }, [])
+
+  const onDeleted = useCallback((id: string) => {
+    setEntries((es) => es.filter((e) => e.id !== id))
+    setSelectedId(null)
     setContentVersion((v) => v + 1)
   }, [])
 
@@ -89,6 +104,7 @@ function App() {
                 guard(() => {
                   setEntries([])
                   setSelectedId(null)
+                  setCreating(false)
                   setActive(c.name)
                 })
               }
@@ -108,12 +124,33 @@ function App() {
 
       <div className="layout">
         <aside className="list">
+          {collection && (
+            <button
+              type="button"
+              className={creating ? 'list-item new-item active' : 'list-item new-item'}
+              onClick={() =>
+                !creating &&
+                guard(() => {
+                  setSelectedId(null)
+                  setCreating(true)
+                })
+              }
+            >
+              + New {collection.name.replace(/s$/, '')}
+            </button>
+          )}
           {entries.map((e) => (
             <button
               key={e.id}
               type="button"
               className={e.id === selectedId ? 'list-item active' : 'list-item'}
-              onClick={() => e.id !== selectedId && guard(() => setSelectedId(e.id))}
+              onClick={() =>
+                e.id !== selectedId &&
+                guard(() => {
+                  setCreating(false)
+                  setSelectedId(e.id)
+                })
+              }
             >
               <span className="list-item-name">
                 {typeof e.data.name === 'string' ? e.data.name : e.id}
@@ -125,14 +162,15 @@ function App() {
         </aside>
 
         <main className="detail">
-          {collection && selected ? (
+          {collection && (selected || creating) ? (
             <EntryEditor
               // Remount per entry so form state resets cleanly.
-              key={`${collection.name}/${selected.id}`}
+              key={`${collection.name}/${creating ? '+new' : selected?.id}`}
               collection={collection.name}
               schema={collection.schema}
-              entry={selected}
+              entry={creating ? null : (selected ?? null)}
               onSaved={onSaved}
+              onDeleted={onDeleted}
               onDirtyChange={setDirty}
             />
           ) : (

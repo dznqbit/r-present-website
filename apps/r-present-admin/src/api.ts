@@ -67,6 +67,16 @@ export const api = {
       `/collections/${encodeURIComponent(collection)}/entries/${encodeURIComponent(id)}`,
       { method: 'PUT', body: JSON.stringify(data) },
     ),
+  create: (collection: string, id: string, data: EntryData) =>
+    request<Entry>(`/collections/${encodeURIComponent(collection)}/entries`, {
+      method: 'POST',
+      body: JSON.stringify({ id, data }),
+    }),
+  remove: (collection: string, id: string) =>
+    request<null>(
+      `/collections/${encodeURIComponent(collection)}/entries/${encodeURIComponent(id)}`,
+      { method: 'DELETE' },
+    ),
   changes: () => request<Change[]>('/changes'),
   publishStatus: () => request<PublishStatus>('/publish'),
   startPublish: () => request<PublishStatus>('/publish', { method: 'POST' }),

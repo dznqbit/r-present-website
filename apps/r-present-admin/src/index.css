@@ -457,3 +457,19 @@ button {
   font-size: 0.8rem;
   white-space: pre-wrap;
 }
+
+/* New / delete */
+
+.new-item {
+  color: var(--accent);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.editor-footer .danger {
+  margin-left: auto;
+  background: none;
+  color: var(--err);
+  border: 1px solid currentColor;
+  font-weight: 500;
+}

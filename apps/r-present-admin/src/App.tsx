@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { api, type Change, type Collection, type Entry } from './api'
 import { EntryEditor } from './EntryEditor'
 import { PreviewButton } from './PreviewButton'
+import { PublishControl } from './PublishControl'
 
 const UNSAVED_PROMPT = 'You have unsaved changes. Discard them?'
 
@@ -60,6 +61,13 @@ function App() {
     setContentVersion((v) => v + 1)
   }, [])
 
+  const onPublishFinished = useCallback(() => {
+    // Refresh the unpublished list and the preview status (publish may have
+    // rebuilt it and pulled down edits made on GitHub).
+    setContentVersion((v) => v + 1)
+    if (active) api.entries(active).then(setEntries).catch(() => {})
+  }, [active])
+
   const changed = (collection: string, id?: string) =>
     changes.some((c) => c.collection === collection && (id === undefined || c.id === id))
 
@@ -91,15 +99,7 @@ function App() {
           ))}
         </nav>
         <div className="topbar-right">
-          {changes.length > 0 && (
-            <span
-              className="unpublished"
-              title={changes.map((c) => `${c.collection}/${c.id} (${c.change})`).join('\n')}
-            >
-              <UnpublishedDot />
-              {changes.length} unpublished {changes.length === 1 ? 'change' : 'changes'}
-            </span>
-          )}
+          <PublishControl changes={changes} editorDirty={dirty} onFinished={onPublishFinished} />
           <PreviewButton contentVersion={contentVersion} />
         </div>
       </header>

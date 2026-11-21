@@ -400,3 +400,60 @@ button {
   font-size: 0.8rem;
   white-space: pre-wrap;
 }
+
+/* Publish */
+
+.publish {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  font-size: 0.95rem;
+}
+
+.publish-btn {
+  border: none;
+  background: var(--unpublished);
+  color: #1d1408;
+  border-radius: 6px;
+  padding: 6px 16px;
+  font-weight: 700;
+}
+
+.published {
+  font-size: 0.9rem;
+}
+
+.published a {
+  color: inherit;
+}
+
+.popover summary {
+  cursor: pointer;
+}
+
+.popover-body {
+  position: absolute;
+  right: 16px;
+  z-index: 10;
+  max-width: min(640px, calc(100vw - 32px));
+  max-height: 60vh;
+  overflow: auto;
+  margin-top: 8px;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.12);
+}
+
+.popover-body p {
+  margin: 0 0 8px;
+}
+
+.popover-body pre {
+  margin: 0;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+}

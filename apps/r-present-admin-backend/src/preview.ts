@@ -79,15 +79,41 @@ export async function getPreviewStatus(): Promise<PreviewStatus> {
   }
 }
 
-/** Kick off a build unless one is already running. Returns immediately. */
-export async function startPreview(): Promise<PreviewStatus> {
-  if (state !== 'building') {
+let running: Promise<void> | null = null
+
+function kickOff(): Promise<void> {
+  if (!running) {
     state = 'building'
     startedAt = new Date()
     failureLog = null
-    void build()
+    running = build().finally(() => {
+      running = null
+    })
   }
+  return running
+}
+
+/** Kick off a build unless one is already running. Returns immediately. */
+export async function startPreview(): Promise<PreviewStatus> {
+  void kickOff()
   return getPreviewStatus()
+}
+
+export class BuildFailedError extends Error {
+  constructor(public readonly log: string[]) {
+    super('The site failed to build')
+  }
+}
+
+/**
+ * Make sure the preview reflects exactly what's saved right now: wait for any
+ * running build, then rebuild only if content changed since. Throws if the
+ * build fails. Publish uses this as its pre-push check.
+ */
+export async function ensureFreshBuild(): Promise<void> {
+  if (running) await running
+  if (state !== 'ready' || builtHash !== (await contentHash())) await kickOff()
+  if (state !== 'ready') throw new BuildFailedError(failureLog ?? [])
 }
 
 async function build(): Promise<void> {

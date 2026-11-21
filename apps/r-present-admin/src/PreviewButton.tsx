@@ -1,17 +1,9 @@
 import { useEffect, useState } from 'react'
 import { api, type PreviewStatus } from './api'
+import { timeAgo } from './time'
 
 const POLL_MS = 1500
 const CLOCK_MS = 30_000
-
-/** "just now", "4 min ago", "2 hr ago", or a date for anything older than a day. */
-function timeAgo(iso: string, now: number): string {
-  const seconds = Math.max(0, (now - Date.parse(iso)) / 1000)
-  if (seconds < 45) return 'just now'
-  if (seconds < 3600) return `${Math.round(seconds / 60)} min ago`
-  if (seconds < 86400) return `${Math.round(seconds / 3600)} hr ago`
-  return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
-}
 
 type Props = {
   /** Bumped whenever content is saved, so we re-check whether the preview is stale. */

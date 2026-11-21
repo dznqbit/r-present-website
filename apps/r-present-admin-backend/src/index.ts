@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { listChanges } from './changes.js'
 import { config } from './config.js'
+import { initPublishedRef } from './git.js'
 import {
   listCollections,
   listEntries,
@@ -12,6 +13,7 @@ import {
   ValidationError,
 } from './content.js'
 import { getPreviewStatus, initPreview, startPreview } from './preview.js'
+import { getPublishStatus, isPublishing, startPublish } from './publish.js'
 
 const app = new Hono().basePath('/api')
 
@@ -33,6 +35,9 @@ app.get('/collections/:collection/entries', async (c) =>
 )
 
 app.put('/collections/:collection/entries/:id', async (c) => {
+  if (isPublishing()) {
+    return c.json({ error: 'Publishing is in progress. Save again in a moment.' }, 409)
+  }
   const body: unknown = await c.req.json()
   if (typeof body !== 'object' || body === null || Array.isArray(body)) {
     throw new ValidationError([{ field: '(root)', message: 'Body must be a JSON object' }])
@@ -47,11 +52,16 @@ app.put('/collections/:collection/entries/:id', async (c) => {
 
 app.get('/changes', async (c) => c.json(await listChanges()))
 
+app.get('/publish', (c) => c.json(getPublishStatus()))
+
+app.post('/publish', (c) => c.json(startPublish(), 202))
+
 app.get('/preview', async (c) => c.json(await getPreviewStatus()))
 
 app.post('/preview', async (c) => c.json(await startPreview(), 202))
 
 await loadSchemas()
+await initPublishedRef()
 await initPreview()
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {

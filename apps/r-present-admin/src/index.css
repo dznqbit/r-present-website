@@ -1,0 +1,279 @@
+:root {
+  --text: #2b2730;
+  --muted: #7a7480;
+  --bg: #fdfcfa;
+  --panel: #ffffff;
+  --border: #e5e2e7;
+  --accent: #8a5a2b;
+  --accent-fg: #ffffff;
+  --accent-soft: #f4ece3;
+  --ok: #2f7d4a;
+  --err: #b3261e;
+  --code-bg: #f4f3ec;
+
+  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #eceaf0;
+    --muted: #a39dab;
+    --bg: #17151b;
+    --panel: #1f1c24;
+    --border: #34303a;
+    --accent: #d39a5f;
+    --accent-fg: #17151b;
+    --accent-soft: #2e251d;
+    --ok: #6cc28a;
+    --err: #ff8a80;
+    --code-bg: #2a2630;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1,
+h2 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: 1.25rem;
+}
+
+h2 {
+  font-size: 1.4rem;
+}
+
+code {
+  background: var(--code-bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.ok {
+  color: var(--ok);
+}
+
+.err {
+  color: var(--err);
+}
+
+/* Layout */
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.tab:hover {
+  background: var(--accent-soft);
+}
+
+.tab.active {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.banner {
+  margin: 0;
+  padding: 8px 16px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 760px) {
+  .layout {
+    grid-template-columns: 260px 1fr;
+    min-height: calc(100vh - 57px);
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+@media (min-width: 760px) {
+  .list {
+    border-bottom: none;
+    border-right: 1px solid var(--border);
+  }
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  border: none;
+  background: none;
+  color: var(--text);
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.list-item:hover {
+  background: var(--accent-soft);
+}
+
+.list-item.active {
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 0.75rem;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0 8px;
+}
+
+.detail {
+  padding: 16px;
+  max-width: 760px;
+  width: 100%;
+}
+
+/* Editor */
+
+.editor-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  margin-bottom: 20px;
+}
+
+.field {
+  margin-bottom: 18px;
+}
+
+.field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.field input[type='text'],
+.field textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.field textarea.mono {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+.field input:focus,
+.field textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.field.has-error input,
+.field.has-error textarea {
+  border-color: var(--err);
+}
+
+.field-checkbox label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.hint,
+.field .err {
+  margin: 4px 0 0;
+  font-size: 0.85rem;
+}
+
+.hint {
+  color: var(--muted);
+}
+
+.editor-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+
+.editor-footer button {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-weight: 600;
+}
+
+.editor-footer button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}

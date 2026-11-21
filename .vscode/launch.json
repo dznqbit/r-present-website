@@ -2,8 +2,23 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "command": "./node_modules/.bin/astro dev",
-      "name": "Development server",
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/apps/r-present-website",
+      "name": "Website dev server",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/apps/r-present-admin",
+      "name": "Admin dev server",
+      "request": "launch",
+      "type": "node-terminal"
+    },
+    {
+      "command": "npm run dev",
+      "cwd": "${workspaceFolder}/apps/r-present-admin-backend",
+      "name": "Admin backend dev server",
       "request": "launch",
       "type": "node-terminal"
     }

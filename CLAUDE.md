@@ -17,6 +17,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 R. Present is a Seattle-based small business selling handmade jewelry. While most communication is handled via Instagram, we want to have a website too.
 
+## Repository Layout
+
+This is a monorepo. Each app is independent (own `package.json` and lockfile, no npm workspaces), so `cd` into the app before running npm commands.
+
+- `apps/r-present-website` - Public Astro site, deployed to GitHub Pages. **Most of this file is about this app; the paths below are relative to it.**
+- `apps/r-present-admin` - Local admin SPA (Vite + React + TS) for editing site content.
+- `apps/r-present-admin-backend` - Node API (Hono) that edits the site's `src/content/`, builds previews, and publishes by committing and pushing to `main`.
+- `devops/` - Deployment config for the admin stack on the Raspberry Pi 3 at 192.168.0.16 (also runs Pi-hole + nginx; ~900MB RAM, so avoid long-running heavy processes).
+
 ## Project Overview
 
 The R. Present website is built with Astro and hosted on GitHub Pages.
@@ -25,6 +34,8 @@ The website exists to meet these goals:
 - A website we can direct non-Instagram folks to visit.
 - Photo gallery of original works and product pages for specific products.
 - "Upcoming Markets" describing upcoming markets.
+
+The admin app exists so non-developers can edit products/markets/projects, preview a draft build on the local network, and publish with one button. No auth for now (LAN only).
 
 ## Technology Stack
 
@@ -36,12 +47,16 @@ The website exists to meet these goals:
 
 ## Development Commands
 
-All commands run from the root directory:
+Website (from `apps/r-present-website`):
 
 - `npm install` - Install dependencies
 - `npm run dev` - Start development server at `localhost:4321`
 - `npm run build` - Build production site to `./dist/`
 - `npm run preview` - Preview production build locally
+
+Admin (from `apps/r-present-admin`): `npm run dev` at `localhost:5173`, proxies `/api` to the backend.
+
+Admin backend (from `apps/r-present-admin-backend`): `npm run dev` at `localhost:8787`. `SITE_DIR` env var points at the site app to edit (defaults to the sibling `apps/r-present-website`).
 
 ## Architecture
 
@@ -89,13 +104,13 @@ Located in `src/content/` with type-safe schemas defined in `src/content/config.
 
 ## Deployment
 
-The site automatically deploys to GitHub Pages when changes are pushed to `main`:
+The site automatically deploys to GitHub Pages when changes under `apps/r-present-website/` are pushed to `main`:
 
 1. GitHub Actions workflow (`.github/workflows/deploy.yml`) triggers on push
-2. Builds the site with `npm run build`
+2. Builds the site with `npm run build` in `apps/r-present-website`
 3. Deploys to GitHub Pages
 
-**Important**: The site is configured for deployment to `https://dznqbit.github.io/r-present-website/` with base path set in `astro.config.mjs`.
+**Important**: The site is served at `https://r-present.com` (`site` set in `astro.config.ts`).
 
 ## Content Management
 

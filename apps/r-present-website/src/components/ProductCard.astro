@@ -1,0 +1,157 @@
+---
+interface Props {
+  sku: string;
+  name: string;
+  category: string;
+  description: string;
+  available: boolean;
+  images: string[];
+  price?: number;
+}
+
+const { sku, name, description, available, images, price } = Astro.props;
+const thumbnail = images[0] || "/placeholder.jpg";
+---
+
+<article class="product-card">
+  <div class="card-header">
+    <div class="card-name">
+      <a href={`/products/${sku}`}>{name}</a>
+    </div>
+  </div>
+
+  <div class="card-image">
+    <img src={thumbnail} alt={name} loading="lazy" />
+  </div>
+
+  <div class="card-footer">
+    <p class="card-description">{description}</p>
+    <div class="card-price">
+      <span class:list={{ "is-sold": !available }}>
+        {price ? `$${price}` : "—"}
+      </span>
+      {!available && <span class="sold-badge">Sold</span>}
+    </div>
+  </div>
+</article>
+
+<style>
+  .product-card {
+    display: flex;
+    flex-direction: column;
+
+    border: 3px solid #1a1a1a;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #fff;
+    transition:
+      transform 0.2s,
+      box-shadow 0.2s;
+  }
+
+  .product-card:hover {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  }
+
+  .product-card a {
+    cursor: none;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .card-header {
+    background-image: radial-gradient(circle, #3b6d92 1.3px, transparent 1.3px);
+    background-size: 9px 9px;
+    border-bottom: 3px solid #1a1a1a;
+  }
+
+  .card-name {
+    display: flex;
+    align-items: left;
+    font-family: "Amatic SC", system-ui, sans-serif;
+    font-size: 1.75rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .card-name a {
+    flex-basis: 80%;
+    background: white;
+    padding: 0.5em;
+    border-right: 3px solid #1a1a1a;
+  }
+
+  .card-image {
+    position: relative;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: #fff;
+  }
+
+  .card-image img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .card-footer {
+    margin-top: auto;
+    margin-bottom: 0;
+    display: flex;
+    border-top: 3px solid #1a1a1a;
+  }
+
+  .card-description {
+    flex: 1.4;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-right: 3px solid #1a1a1a;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    align-self: center;
+    text-align: center;
+    font-family: "Averia Libre", system-ui, sans-serif;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: #333;
+  }
+
+  .card-price {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    font-family: "Amatic SC", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 2.25rem;
+  }
+
+  .card-price .is-sold {
+    text-decoration: line-through;
+    color: #888;
+  }
+
+  .sold-badge {
+    background: #c0392b;
+    color: #fff;
+    padding: 0.15rem 0.6rem;
+    border-radius: 4px;
+    font-family: "Averia Libre", system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+</style>

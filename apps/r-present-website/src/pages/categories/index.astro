@@ -1,0 +1,64 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProductCard from "../../components/ProductCard.astro";
+import { getCollection } from "astro:content";
+
+const products = await getCollection("products");
+const sortedProducts = products.sort(
+  (a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime(),
+);
+---
+
+<BaseLayout title="Shop - R. Present">
+  <div class="products-grid">
+    {
+      sortedProducts.map((product) => (
+        <ProductCard
+          sku={product.id}
+          name={product.data.name}
+          category={product.data.category}
+          description={product.data.description}
+          available={product.data.available}
+          images={product.data.images}
+          price={product.data.price}
+        />
+      ))
+    }
+  </div>
+
+  {
+    sortedProducts.length === 0 && (
+      <p class="no-products">No products available yet. Check back soon!</p>
+    )
+  }
+</BaseLayout>
+
+<style>
+  h1 {
+    font-size: 2.5rem;
+    margin: 0 0 2rem 0;
+  }
+
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+  }
+
+  .no-products {
+    text-align: center;
+    padding: 3rem;
+    color: #666;
+    font-size: 1.125rem;
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+
+    .products-grid {
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+  }
+</style>

@@ -1,10 +1,6 @@
 # devops
 
-Deployment config for the admin stack on the Raspberry Pi (192.168.0.16):
-nginx site config, systemd unit for `r-present-admin-backend`, and setup notes
-(Node install, deploy key, site clone).
+- [`pi/`](pi/): the admin stack on the Raspberry Pi (192.168.0.16). That covers nginx, systemd and the deploy script.
 
-The public website deploys separately via GitHub Actions → GitHub Pages
+The public website deploys separately, through GitHub Actions to GitHub Pages
 (`.github/workflows/deploy.yml`).
-
-_TODO._

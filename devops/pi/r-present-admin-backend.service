@@ -1,0 +1,22 @@
+# Install: /etc/systemd/system/r-present-admin-backend.service
+[Unit]
+Description=R. Present admin backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=dznqbit
+WorkingDirectory=/srv/r-present/repo/apps/r-present-admin-backend
+Environment=NODE_ENV=production
+Environment=PORT=8787
+Environment=SITE_DIR=/srv/r-present/repo/apps/r-present-website
+# The backend shells out to npx (astro sync, later builds), so it needs Node on PATH.
+Environment=PATH=/opt/node/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/opt/node/bin/node dist/index.js
+Restart=on-failure
+RestartSec=5
+# Keep it from starving Pi-hole on a 1GB Pi 3.
+MemoryMax=600M
+
+[Install]
+WantedBy=multi-user.target

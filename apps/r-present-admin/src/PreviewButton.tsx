@@ -2,6 +2,16 @@ import { useEffect, useState } from 'react'
 import { api, type PreviewStatus } from './api'
 
 const POLL_MS = 1500
+const CLOCK_MS = 30_000
+
+/** "just now", "4 min ago", "2 hr ago", or a date for anything older than a day. */
+function timeAgo(iso: string, now: number): string {
+  const seconds = Math.max(0, (now - Date.parse(iso)) / 1000)
+  if (seconds < 45) return 'just now'
+  if (seconds < 3600) return `${Math.round(seconds / 60)} min ago`
+  if (seconds < 86400) return `${Math.round(seconds / 3600)} hr ago`
+  return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+}
 
 type Props = {
   /** Bumped whenever content is saved, so we re-check whether the preview is stale. */
@@ -34,6 +44,14 @@ export function PreviewButton({ contentVersion }: Props) {
     }, POLL_MS)
     return () => window.clearInterval(timer)
   }, [building])
+
+  // Keep "built N min ago" current while a preview is showing.
+  const ready = status?.state === 'ready'
+  useEffect(() => {
+    if (!ready) return
+    const timer = window.setInterval(() => setNow(Date.now()), CLOCK_MS)
+    return () => window.clearInterval(timer)
+  }, [ready])
 
   const start = () => {
     setError(null)
@@ -79,6 +97,15 @@ export function PreviewButton({ contentVersion }: Props) {
         <a className="preview-link" href={url.toString()} target="_blank" rel="noreferrer">
           View preview ↗
         </a>
+        {status.finishedAt && (
+          <time
+            className="muted built-at"
+            dateTime={status.finishedAt}
+            title={new Date(status.finishedAt).toLocaleString()}
+          >
+            built {timeAgo(status.finishedAt, now)}
+          </time>
+        )}
         {status.stale && <span className="muted">Out of date</span>}
         <button
           type="button"

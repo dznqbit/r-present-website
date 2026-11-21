@@ -10,6 +10,7 @@
   --ok: #2f7d4a;
   --err: #b3261e;
   --code-bg: #f4f3ec;
+  --unpublished: #d98a1f;
 
   font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
@@ -30,6 +31,7 @@
     --ok: #6cc28a;
     --err: #ff8a80;
     --code-bg: #2a2630;
+    --unpublished: #f0a84a;
   }
 }
 
@@ -280,8 +282,52 @@ button {
 
 /* Preview */
 
-.preview {
+.topbar-right {
   margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.unpublished {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: var(--muted);
+  cursor: default;
+}
+
+.dot {
+  display: inline-block;
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--unpublished);
+}
+
+.tab .dot {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.tab.active .dot {
+  background: var(--accent-fg);
+}
+
+.list-item-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.built-at {
+  font-size: 0.85rem;
+}
+
+.preview {
   display: flex;
   flex-wrap: wrap;
   align-items: center;

@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
+import { listChanges } from './changes.js'
 import { config } from './config.js'
 import {
   listCollections,
@@ -44,12 +45,14 @@ app.put('/collections/:collection/entries/:id', async (c) => {
   return c.json(entry)
 })
 
+app.get('/changes', async (c) => c.json(await listChanges()))
+
 app.get('/preview', async (c) => c.json(await getPreviewStatus()))
 
 app.post('/preview', async (c) => c.json(await startPreview(), 202))
 
 await loadSchemas()
-initPreview()
+await initPreview()
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`r-present-admin-backend listening on :${info.port}`)

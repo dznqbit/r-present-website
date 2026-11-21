@@ -56,9 +56,15 @@ export async function contentHash(): Promise<string> {
   return hash.digest('hex')
 }
 
-/** If a preview exists from before a restart, treat it as ready but unknown-freshness. */
-export function initPreview(): void {
-  if (existsSync(path.join(config.previewDir, 'index.html'))) state = 'ready'
+/**
+ * If a preview exists from before a restart, treat it as ready but of unknown
+ * freshness, and recover its build time from the files.
+ */
+export async function initPreview(): Promise<void> {
+  const index = path.join(config.previewDir, 'index.html')
+  if (!existsSync(index)) return
+  state = 'ready'
+  finishedAt = (await fs.stat(index)).mtime
 }
 
 export async function getPreviewStatus(): Promise<PreviewStatus> {

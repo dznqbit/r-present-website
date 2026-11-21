@@ -21,6 +21,12 @@ export type PreviewStatus = {
   log: string[] | null
 }
 
+export type Change = {
+  collection: string
+  id: string
+  change: 'modified' | 'added' | 'deleted'
+}
+
 export class ApiError extends Error {
   readonly errors: FieldError[]
   constructor(message: string, errors: FieldError[] = []) {
@@ -51,6 +57,7 @@ export const api = {
       `/collections/${encodeURIComponent(collection)}/entries/${encodeURIComponent(id)}`,
       { method: 'PUT', body: JSON.stringify(data) },
     ),
+  changes: () => request<Change[]>('/changes'),
   previewStatus: () => request<PreviewStatus>('/preview'),
   startPreview: () => request<PreviewStatus>('/preview', { method: 'POST' }),
 }

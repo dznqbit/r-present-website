@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { api, type Collection, type Entry } from './api'
+import { api, type Change, type Collection, type Entry } from './api'
 import { EntryEditor } from './EntryEditor'
 import { PreviewButton } from './PreviewButton'
 
@@ -12,6 +12,7 @@ function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
   const [contentVersion, setContentVersion] = useState(0)
+  const [changes, setChanges] = useState<Change[]>([])
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -32,6 +33,14 @@ function App() {
       .catch((err: unknown) => setError(String(err)))
   }, [active])
 
+  // Saved-but-unpublished edits, refreshed after every save.
+  useEffect(() => {
+    api
+      .changes()
+      .then(setChanges)
+      .catch((err: unknown) => setError(String(err)))
+  }, [contentVersion])
+
   // Warn before closing the tab with unsaved edits.
   useEffect(() => {
     if (!dirty) return
@@ -50,6 +59,9 @@ function App() {
     setEntries((es) => es.map((e) => (e.id === saved.id ? saved : e)))
     setContentVersion((v) => v + 1)
   }, [])
+
+  const changed = (collection: string, id?: string) =>
+    changes.some((c) => c.collection === collection && (id === undefined || c.id === id))
 
   const collection = collections.find((c) => c.name === active)
   const selected = entries.find((e) => e.id === selectedId)
@@ -74,10 +86,22 @@ function App() {
               }
             >
               {c.name}
+              {changed(c.name) && <UnpublishedDot />}
             </button>
           ))}
         </nav>
-        <PreviewButton contentVersion={contentVersion} />
+        <div className="topbar-right">
+          {changes.length > 0 && (
+            <span
+              className="unpublished"
+              title={changes.map((c) => `${c.collection}/${c.id} (${c.change})`).join('\n')}
+            >
+              <UnpublishedDot />
+              {changes.length} unpublished {changes.length === 1 ? 'change' : 'changes'}
+            </span>
+          )}
+          <PreviewButton contentVersion={contentVersion} />
+        </div>
       </header>
 
       {error && <p className="banner err">{error}</p>}
@@ -91,7 +115,10 @@ function App() {
               className={e.id === selectedId ? 'list-item active' : 'list-item'}
               onClick={() => e.id !== selectedId && guard(() => setSelectedId(e.id))}
             >
-              <span>{typeof e.data.name === 'string' ? e.data.name : e.id}</span>
+              <span className="list-item-name">
+                {typeof e.data.name === 'string' ? e.data.name : e.id}
+                {active && changed(active, e.id) && <UnpublishedDot />}
+              </span>
               {e.data.available === false && <span className="badge">sold</span>}
             </button>
           ))}
@@ -115,6 +142,10 @@ function App() {
       </div>
     </div>
   )
+}
+
+function UnpublishedDot() {
+  return <span className="dot" title="Edited, not published yet" aria-label="unpublished changes" />
 }
 
 export default App

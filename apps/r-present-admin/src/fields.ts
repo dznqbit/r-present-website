@@ -3,12 +3,13 @@ import type { EntryData, JsonSchema } from './api'
 /**
  * How a schema property is edited:
  * - text / longtext: a string input
+ * - date: a calendar day (YYYY-MM-DD) picked with the browser's date picker
  * - number: numeric input
  * - boolean: checkbox
  * - lines: list of strings, one per line
  * - json: anything else (e.g. arrays of objects), edited as raw JSON
  */
-export type FieldKind = 'text' | 'longtext' | 'number' | 'boolean' | 'lines' | 'json'
+export type FieldKind = 'text' | 'longtext' | 'date' | 'number' | 'boolean' | 'lines' | 'json'
 
 export type Field = {
   name: string
@@ -24,6 +25,10 @@ export type Draft = Record<string, DraftValue>
 const LONG_TEXT_FIELDS = new Set(['description'])
 
 const isString = (s: JsonSchema) => s.type === 'string'
+const formatsOf = (s: JsonSchema) => s.anyOf?.map((x) => x.format) ?? [s.format]
+const isDateSchema = (s: JsonSchema) =>
+  formatsOf(s).some((f) => f === 'date' || f === 'date-time')
+const DAY = /^\d{4}-\d{2}-\d{2}$/
 const allowsString = (s: JsonSchema | undefined) =>
   !!s && (isString(s) || (s.anyOf?.some(isString) ?? false))
 
@@ -35,6 +40,11 @@ function kindFor(name: string, schema: JsonSchema, value: unknown): FieldKind {
     const ok = value === undefined || (Array.isArray(value) && value.every((v) => typeof v === 'string'))
     if (ok) return 'lines'
   }
+  // Calendar days get a date picker. Full timestamps stay plain text so a save
+  // can't quietly chop off their time.
+  if (isDateSchema(schema) && (value === undefined || (typeof value === 'string' && DAY.test(value)))) {
+    return 'date'
+  }
   if (allowsString(schema) && (value === undefined || typeof value === 'string')) {
     return LONG_TEXT_FIELDS.has(name) ? 'longtext' : 'text'
   }
@@ -44,7 +54,8 @@ function kindFor(name: string, schema: JsonSchema, value: unknown): FieldKind {
 function hintFor(schema: JsonSchema, kind: FieldKind): string | undefined {
   if (kind === 'lines') return 'One per line'
   if (kind === 'json') return 'JSON'
-  const formats = schema.anyOf?.map((s) => s.format) ?? [schema.format]
+  if (kind === 'date') return undefined
+  const formats = formatsOf(schema)
   if (formats.includes('date') || formats.includes('date-time')) return 'Date, e.g. 2026-03-14'
   if (formats.includes('uri')) return 'Full URL, starting with https://'
   return undefined

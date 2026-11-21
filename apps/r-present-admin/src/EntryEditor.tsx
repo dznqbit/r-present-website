@@ -230,7 +230,7 @@ function FieldInput({ field, value, error, autoFocus = false, onChange }: FieldI
       ) : (
         <input
           id={id}
-          type="text"
+          type={field.kind === 'date' ? 'date' : 'text'}
           autoFocus={autoFocus}
           inputMode={field.kind === 'number' ? 'decimal' : undefined}
           value={text}

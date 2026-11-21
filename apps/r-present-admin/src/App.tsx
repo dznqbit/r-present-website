@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, type Change, type Collection, type Entry } from './api'
 import { EntryEditor } from './EntryEditor'
+import { Home } from './Home'
 import { PreviewButton } from './PreviewButton'
 import { PublishControl } from './PublishControl'
+import { UnpublishedDot } from './UnpublishedDot'
 
 const UNSAVED_PROMPT = 'You have unsaved changes. Discard them?'
 
 function App() {
   const [collections, setCollections] = useState<Collection[]>([])
+  // null = the index page.
   const [active, setActive] = useState<string | null>(null)
   const [entries, setEntries] = useState<Entry[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -20,10 +23,7 @@ function App() {
   useEffect(() => {
     api
       .collections()
-      .then((cs) => {
-        setCollections(cs)
-        setActive(cs.find((c) => c.name === 'products')?.name ?? cs[0]?.name ?? null)
-      })
+      .then(setCollections)
       .catch((err: unknown) => setError(`Couldn't reach the backend: ${String(err)}`))
   }, [])
 
@@ -83,6 +83,15 @@ function App() {
     if (active) api.entries(active).then(setEntries).catch(() => {})
   }, [active])
 
+  /** Switch to a collection, optionally opening an entry or a blank new one. */
+  const go = (collection: string | null, opts: { id?: string; create?: boolean } = {}) =>
+    guard(() => {
+      if (collection !== active) setEntries([])
+      setActive(collection)
+      setSelectedId(opts.id ?? null)
+      setCreating(opts.create ?? false)
+    })
+
   const changed = (collection: string, id?: string) =>
     changes.some((c) => c.collection === collection && (id === undefined || c.id === id))
 
@@ -92,22 +101,18 @@ function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <h1>R. Present Admin</h1>
+        <h1>
+          <button type="button" className="home-link" onClick={() => active !== null && go(null)}>
+            R. Present Admin
+          </button>
+        </h1>
         <nav className="tabs">
           {collections.map((c) => (
             <button
               key={c.name}
               type="button"
               className={c.name === active ? 'tab active' : 'tab'}
-              onClick={() =>
-                c.name !== active &&
-                guard(() => {
-                  setEntries([])
-                  setSelectedId(null)
-                  setCreating(false)
-                  setActive(c.name)
-                })
-              }
+              onClick={() => c.name !== active && go(c.name)}
             >
               {c.name}
               {changed(c.name) && <UnpublishedDot />}
@@ -115,76 +120,84 @@ function App() {
           ))}
         </nav>
         <div className="topbar-right">
-          <PublishControl changes={changes} editorDirty={dirty} onFinished={onPublishFinished} />
           <PreviewButton contentVersion={contentVersion} />
+          {/* Publish is the final step, so it sits at the far right. */}
+          <PublishControl changes={changes} editorDirty={dirty} onFinished={onPublishFinished} />
         </div>
       </header>
 
       {error && <p className="banner err">{error}</p>}
 
-      <div className="layout">
-        <aside className="list">
-          {collection && (
-            <button
-              type="button"
-              className={creating ? 'list-item new-item active' : 'list-item new-item'}
-              onClick={() =>
-                !creating &&
-                guard(() => {
-                  setSelectedId(null)
-                  setCreating(true)
-                })
-              }
-            >
-              + New {collection.name.replace(/s$/, '')}
-            </button>
-          )}
-          {entries.map((e) => (
-            <button
-              key={e.id}
-              type="button"
-              className={e.id === selectedId ? 'list-item active' : 'list-item'}
-              onClick={() =>
-                e.id !== selectedId &&
-                guard(() => {
-                  setCreating(false)
-                  setSelectedId(e.id)
-                })
-              }
-            >
-              <span className="list-item-name">
-                {typeof e.data.name === 'string' ? e.data.name : e.id}
-                {active && changed(active, e.id) && <UnpublishedDot />}
-              </span>
-              {e.data.available === false && <span className="badge">sold</span>}
-            </button>
-          ))}
-        </aside>
-
-        <main className="detail">
-          {collection && (selected || creating) ? (
-            <EntryEditor
-              // Remount per entry so form state resets cleanly.
-              key={`${collection.name}/${creating ? '+new' : selected?.id}`}
-              collection={collection.name}
-              schema={collection.schema}
-              hidden={collection.writeOnce}
-              entry={creating ? null : (selected ?? null)}
-              onSaved={onSaved}
-              onDeleted={onDeleted}
-              onDirtyChange={setDirty}
-            />
-          ) : (
-            <p className="muted">Pick something on the left to edit.</p>
-          )}
+      {active === null ? (
+        <main className="home-main">
+          <Home
+            contentVersion={contentVersion}
+            isChanged={(c, id) => changed(c, id)}
+            onOpen={(c, id) => go(c, { id })}
+            onCreate={(c) => go(c, { create: true })}
+          />
         </main>
-      </div>
+      ) : (
+        <div className="layout">
+          <aside className="list">
+            {collection && (
+              <button
+                type="button"
+                className={creating ? 'list-item new-item active' : 'list-item new-item'}
+                onClick={() =>
+                  !creating &&
+                  guard(() => {
+                    setSelectedId(null)
+                    setCreating(true)
+                  })
+                }
+              >
+                + New {collection.name.replace(/s$/, '')}
+              </button>
+            )}
+            {entries.map((e) => (
+              <button
+                key={e.id}
+                type="button"
+                className={e.id === selectedId ? 'list-item active' : 'list-item'}
+                onClick={() =>
+                  e.id !== selectedId &&
+                  guard(() => {
+                    setCreating(false)
+                    setSelectedId(e.id)
+                  })
+                }
+              >
+                <span className="list-item-name">
+                  {typeof e.data.name === 'string' ? e.data.name : e.id}
+                  {active && changed(active, e.id) && <UnpublishedDot />}
+                </span>
+                {e.data.available === false && <span className="badge">sold</span>}
+              </button>
+            ))}
+          </aside>
+
+          <main className="detail">
+            {collection && (selected || creating) ? (
+              <EntryEditor
+                // Remount per entry so form state resets cleanly.
+                key={`${collection.name}/${creating ? '+new' : selected?.id}`}
+                collection={collection.name}
+                schema={collection.schema}
+                hidden={collection.writeOnce}
+                entry={creating ? null : (selected ?? null)}
+                onSaved={onSaved}
+                onDeleted={onDeleted}
+                onDirtyChange={setDirty}
+              />
+            ) : (
+              <p className="muted">Pick something on the left to edit.</p>
+            )}
+          </main>
+        </div>
+      )}
     </div>
   )
-}
-
-function UnpublishedDot() {
-  return <span className="dot" title="Edited, not published yet" aria-label="unpublished changes" />
 }
 
 export default App

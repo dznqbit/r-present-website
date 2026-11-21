@@ -196,6 +196,7 @@ button {
 }
 
 .field input[type='text'],
+.field input[type='date'],
 .field textarea {
   width: 100%;
   font: inherit;
@@ -491,4 +492,146 @@ button {
   color: var(--err);
   border: 1px solid currentColor;
   font-weight: 500;
+}
+
+/* Index page */
+
+.home-link {
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.home-link:hover {
+  color: var(--accent);
+}
+
+.home-main {
+  padding: 24px 16px 48px;
+}
+
+.home {
+  max-width: 860px;
+  margin: 0 auto;
+  display: grid;
+  gap: 36px;
+}
+
+.home-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 2px solid var(--text);
+}
+
+.home-section-header h2 {
+  font-size: 1.35rem;
+}
+
+.text-btn {
+  border: none;
+  background: none;
+  padding: 4px 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.text-btn:hover {
+  text-decoration: underline;
+}
+
+.home-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.home-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.home-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 8px;
+  border: none;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  border-radius: 6px;
+}
+
+.home-row:hover {
+  background: var(--accent-soft);
+}
+
+.home-row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.home-row-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.home-row-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: none;
+}
+
+.small {
+  font-size: 0.85rem;
+}
+
+.market-date {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  width: 150px;
+}
+
+.market-when {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.thumb {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: var(--code-bg);
+}
+
+@media (max-width: 520px) {
+  .market-date {
+    width: 96px;
+    font-size: 0.9rem;
+  }
+
+  .home-row-end .small {
+    display: none;
+  }
+}
+
+/* Date picker: sized to its contents, not stretched across the form. */
+.field input[type='date'] {
+  width: auto;
+  min-width: 200px;
 }

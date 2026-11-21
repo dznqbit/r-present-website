@@ -1,0 +1,36 @@
+:root {
+  --text: #2b2730;
+  --bg: #fdfcfa;
+  --border: #e5e4e7;
+  --code-bg: #f4f3ec;
+
+  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #eceaf0;
+    --bg: #17151b;
+    --border: #2e2b33;
+    --code-bg: #24212a;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+code {
+  background: var(--code-bg);
+  padding: 1px 4px;
+  border-radius: 4px;
+}

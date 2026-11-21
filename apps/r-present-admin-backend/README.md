@@ -16,3 +16,17 @@ npm run build && npm start
 | ---------- | --------------------------- | -------------------------------------- |
 | `PORT`     | `8787`                      | HTTP port                              |
 | `SITE_DIR` | `../r-present-website`      | Site app whose `src/content/` we edit  |
+
+## API
+
+| Method | Path                                         | What                                                    |
+| ------ | -------------------------------------------- | ------------------------------------------------------- |
+| GET    | `/api/health`                                | Liveness + which site dir is being edited               |
+| GET    | `/api/collections`                           | Collection names + JSON Schemas                         |
+| GET    | `/api/collections/:collection/entries`       | All entries (`{ id, data }`) in a collection            |
+| PUT    | `/api/collections/:collection/entries/:id`   | Validate + overwrite an existing entry (400 w/ `errors`) |
+
+Schemas come from the JSON Schema files Astro generates in the site's `.astro/collections/`
+(the backend runs `astro sync` if they're missing), so the site's `src/content/config.ts`
+is the single source of truth. Saved files are formatted with the site's own Prettier and
+keep their existing key order, so diffs only show real changes.

@@ -1,28 +1,115 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { api, type Collection, type Entry } from './api'
+import { EntryEditor } from './EntryEditor'
 
-type Health = { ok: boolean; siteDir: string }
+const UNSAVED_PROMPT = 'You have unsaved changes. Discard them?'
 
 function App() {
-  const [health, setHealth] = useState<Health | null>(null)
+  const [collections, setCollections] = useState<Collection[]>([])
+  const [active, setActive] = useState<string | null>(null)
+  const [entries, setEntries] = useState<Entry[]>([])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [dirty, setDirty] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('/api/health')
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json() as Promise<Health>
+    api
+      .collections()
+      .then((cs) => {
+        setCollections(cs)
+        setActive(cs.find((c) => c.name === 'products')?.name ?? cs[0]?.name ?? null)
       })
-      .then(setHealth)
-      .catch((err: unknown) => setError(String(err)))
+      .catch((err: unknown) => setError(`Couldn't reach the backend: ${String(err)}`))
   }, [])
 
+  useEffect(() => {
+    if (!active) return
+    api
+      .entries(active)
+      .then(setEntries)
+      .catch((err: unknown) => setError(String(err)))
+  }, [active])
+
+  // Warn before closing the tab with unsaved edits.
+  useEffect(() => {
+    if (!dirty) return
+    const handler = (e: BeforeUnloadEvent) => e.preventDefault()
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [dirty])
+
+  const guard = (action: () => void) => {
+    if (dirty && !window.confirm(UNSAVED_PROMPT)) return
+    setDirty(false)
+    action()
+  }
+
+  const onSaved = useCallback((saved: Entry) => {
+    setEntries((es) => es.map((e) => (e.id === saved.id ? saved : e)))
+  }, [])
+
+  const collection = collections.find((c) => c.name === active)
+  const selected = entries.find((e) => e.id === selectedId)
+
   return (
-    <main>
-      <h1>R. Present Admin</h1>
-      {error && <p>Backend unreachable: {error}</p>}
-      {health && <p>Backend OK — editing site at <code>{health.siteDir}</code></p>}
-      {!health && !error && <p>Checking backend…</p>}
-    </main>
+    <div className="app">
+      <header className="topbar">
+        <h1>R. Present Admin</h1>
+        <nav className="tabs">
+          {collections.map((c) => (
+            <button
+              key={c.name}
+              type="button"
+              className={c.name === active ? 'tab active' : 'tab'}
+              onClick={() =>
+                c.name !== active &&
+                guard(() => {
+                  setEntries([])
+                  setSelectedId(null)
+                  setActive(c.name)
+                })
+              }
+            >
+              {c.name}
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {error && <p className="banner err">{error}</p>}
+
+      <div className="layout">
+        <aside className="list">
+          {entries.map((e) => (
+            <button
+              key={e.id}
+              type="button"
+              className={e.id === selectedId ? 'list-item active' : 'list-item'}
+              onClick={() => e.id !== selectedId && guard(() => setSelectedId(e.id))}
+            >
+              <span>{typeof e.data.name === 'string' ? e.data.name : e.id}</span>
+              {e.data.available === false && <span className="badge">sold</span>}
+            </button>
+          ))}
+        </aside>
+
+        <main className="detail">
+          {collection && selected ? (
+            <EntryEditor
+              // Remount per entry so form state resets cleanly.
+              key={`${collection.name}/${selected.id}`}
+              collection={collection.name}
+              schema={collection.schema}
+              entry={selected}
+              onSaved={onSaved}
+              onDirtyChange={setDirty}
+            />
+          ) : (
+            <p className="muted">Pick something on the left to edit.</p>
+          )}
+        </main>
+      </div>
+    </div>
   )
 }
 

@@ -10,6 +10,7 @@ import {
   saveEntry,
   ValidationError,
 } from './content.js'
+import { getPreviewStatus, initPreview, startPreview } from './preview.js'
 
 const app = new Hono().basePath('/api')
 
@@ -43,7 +44,12 @@ app.put('/collections/:collection/entries/:id', async (c) => {
   return c.json(entry)
 })
 
+app.get('/preview', async (c) => c.json(await getPreviewStatus()))
+
+app.post('/preview', async (c) => c.json(await startPreview(), 202))
+
 await loadSchemas()
+initPreview()
 
 serve({ fetch: app.fetch, port: config.port }, (info) => {
   console.log(`r-present-admin-backend listening on :${info.port}`)

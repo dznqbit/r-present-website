@@ -24,3 +24,8 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# admin preview builds
+.preview/
+.preview-next/
+.preview-old/

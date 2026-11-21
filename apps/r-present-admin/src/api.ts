@@ -12,6 +12,15 @@ export type EntryData = Record<string, unknown>
 export type Entry = { id: string; data: EntryData }
 export type FieldError = { field: string; message: string }
 
+export type PreviewStatus = {
+  state: 'none' | 'building' | 'ready' | 'failed'
+  startedAt: string | null
+  finishedAt: string | null
+  stale: boolean
+  port: number
+  log: string[] | null
+}
+
 export class ApiError extends Error {
   readonly errors: FieldError[]
   constructor(message: string, errors: FieldError[] = []) {
@@ -42,4 +51,6 @@ export const api = {
       `/collections/${encodeURIComponent(collection)}/entries/${encodeURIComponent(id)}`,
       { method: 'PUT', body: JSON.stringify(data) },
     ),
+  previewStatus: () => request<PreviewStatus>('/preview'),
+  startPreview: () => request<PreviewStatus>('/preview', { method: 'POST' }),
 }

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api, type Collection, type Entry } from './api'
 import { EntryEditor } from './EntryEditor'
+import { PreviewButton } from './PreviewButton'
 
 const UNSAVED_PROMPT = 'You have unsaved changes. Discard them?'
 
@@ -10,6 +11,7 @@ function App() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [contentVersion, setContentVersion] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -46,6 +48,7 @@ function App() {
 
   const onSaved = useCallback((saved: Entry) => {
     setEntries((es) => es.map((e) => (e.id === saved.id ? saved : e)))
+    setContentVersion((v) => v + 1)
   }, [])
 
   const collection = collections.find((c) => c.name === active)
@@ -74,6 +77,7 @@ function App() {
             </button>
           ))}
         </nav>
+        <PreviewButton contentVersion={contentVersion} />
       </header>
 
       {error && <p className="banner err">{error}</p>}

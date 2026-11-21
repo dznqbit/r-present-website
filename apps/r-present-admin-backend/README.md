@@ -16,6 +16,8 @@ npm run build && npm start
 | ---------- | --------------------------- | -------------------------------------- |
 | `PORT`     | `8787`                      | HTTP port                              |
 | `SITE_DIR` | `../r-present-website`      | Site app whose `src/content/` we edit  |
+| `PREVIEW_DIR` | `<repo>/.preview`        | Where preview builds land               |
+| `PREVIEW_PORT` | `8081`                  | Port the preview is served on (by nginx) |
 
 ## API
 
@@ -25,6 +27,8 @@ npm run build && npm start
 | GET    | `/api/collections`                           | Collection names + JSON Schemas                         |
 | GET    | `/api/collections/:collection/entries`       | All entries (`{ id, data }`) in a collection            |
 | PUT    | `/api/collections/:collection/entries/:id`   | Validate + overwrite an existing entry (400 w/ `errors`) |
+| GET    | `/api/preview`                               | Preview build status (`none`/`building`/`ready`/`failed`, `stale`) |
+| POST   | `/api/preview`                               | Start a preview build (no-op if one is running)         |
 
 Schemas come from the JSON Schema files Astro generates in the site's `.astro/collections/`
 (the backend runs `astro sync` if they're missing), so the site's `src/content/config.ts`

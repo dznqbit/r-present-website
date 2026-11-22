@@ -6,10 +6,23 @@ import type { EntryData, JsonSchema } from './api'
  * - date: a calendar day (YYYY-MM-DD) picked with the browser's date picker
  * - number: numeric input
  * - boolean: checkbox
+ * - images: list of photo URLs, edited as a gallery with uploads
+ * - captionedImages: list of { url, description }, a gallery with a caption per photo
  * - lines: list of strings, one per line
  * - json: anything else (e.g. arrays of objects), edited as raw JSON
  */
-export type FieldKind = 'text' | 'longtext' | 'date' | 'number' | 'boolean' | 'lines' | 'json'
+export type FieldKind =
+  | 'text'
+  | 'longtext'
+  | 'date'
+  | 'number'
+  | 'boolean'
+  | 'images'
+  | 'captionedImages'
+  | 'lines'
+  | 'json'
+
+export type CaptionedImage = { url: string; description: string }
 
 export type Field = {
   name: string
@@ -32,9 +45,22 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/
 const allowsString = (s: JsonSchema | undefined) =>
   !!s && (isString(s) || (s.anyOf?.some(isString) ?? false))
 
+const isUri = (s: JsonSchema | undefined) => !!s && s.type === 'string' && s.format === 'uri'
+
 function kindFor(name: string, schema: JsonSchema, value: unknown): FieldKind {
   if (schema.type === 'boolean') return 'boolean'
   if (schema.type === 'number' || schema.type === 'integer') return 'number'
+  if (schema.type === 'array' && name.toLowerCase().includes('image')) {
+    const list = Array.isArray(value) ? value : []
+    if (isUri(schema.items) && list.every((v) => typeof v === 'string')) return 'images'
+    const props = schema.items?.properties
+    const objectsOk = list.every(
+      (v) => typeof v === 'object' && v !== null && typeof (v as CaptionedImage).url === 'string',
+    )
+    if (props && isUri(props.url) && props.description?.type === 'string' && objectsOk) {
+      return 'captionedImages'
+    }
+  }
   if (schema.type === 'array' && allowsString(schema.items)) {
     // Only use the simple list editor when every current value is a plain string.
     const ok = value === undefined || (Array.isArray(value) && value.every((v) => typeof v === 'string'))
@@ -52,6 +78,7 @@ function kindFor(name: string, schema: JsonSchema, value: unknown): FieldKind {
 }
 
 function hintFor(schema: JsonSchema, kind: FieldKind): string | undefined {
+  if (kind === 'images' || kind === 'captionedImages') return undefined
   if (kind === 'lines') return 'One per line'
   if (kind === 'json') return 'JSON'
   if (kind === 'date') return undefined
@@ -93,6 +120,11 @@ export function toDraft(fields: Field[], data: EntryData): Draft {
       case 'lines':
         draft[f.name] = Array.isArray(v) ? v.join('\n') : ''
         break
+      case 'images':
+      case 'captionedImages':
+        // Galleries keep their list as JSON text so Draft stays string | boolean.
+        draft[f.name] = JSON.stringify(Array.isArray(v) ? v : [])
+        break
       case 'json':
         draft[f.name] = v === undefined ? '' : JSON.stringify(v, null, 2)
         break
@@ -127,6 +159,17 @@ export function fromDraft(
       continue
     }
     const text = typeof raw === 'string' ? raw : ''
+
+    if (f.kind === 'images' || f.kind === 'captionedImages') {
+      const list = text ? (JSON.parse(text) as unknown[]) : []
+      if (list.length === 0) {
+        if (f.required) errors[f.name] = 'needs at least one photo'
+        continue
+      }
+      data[f.name] = list
+      continue
+    }
+
     const empty = text.trim() === ''
     if (empty) {
       // The schema happily accepts "" for a required string, but a market with

@@ -94,6 +94,7 @@ async function publish(): Promise<void> {
     // 2. Anything left to publish?
     const pending = await workingChangesAgainst(latest)
     if (pending.length === 0) throw new PublishError('Nothing to publish. Everything is already live.')
+    await refuseLocalPhotos(pending)
 
     // 3. Never push something that doesn't build.
     step = 'Building the site'
@@ -182,6 +183,26 @@ async function syncRemoteContent(
       await fs.mkdir(path.dirname(file), { recursive: true })
       await fs.writeFile(file, await git(['show', `${latest}:./${rel}`]))
     }
+  }
+}
+
+/**
+ * Photos uploaded without S3 only exist on this machine. Publishing an entry
+ * that points at one would put a broken image on the live site.
+ */
+async function refuseLocalPhotos(pending: PathChange[]): Promise<void> {
+  const local = config.uploads.localBaseUrl
+  const offenders: string[] = []
+  for (const { path: rel, change } of pending) {
+    if (change === 'deleted') continue
+    const text = await fs.readFile(path.join(config.siteDir, rel), 'utf8')
+    if (text.includes(local)) offenders.push(rel)
+  }
+  if (offenders.length > 0) {
+    throw new PublishError(
+      "Some photos were only saved on this computer, not uploaded to the image server, so they'd be broken on the live site.",
+      offenders,
+    )
   }
 }
 

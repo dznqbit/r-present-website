@@ -635,3 +635,143 @@ button {
   width: auto;
   min-width: 200px;
 }
+
+/* Photo gallery */
+
+.field .label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  padding: 10px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+
+.gallery.dragging {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.field.has-error .gallery {
+  border-color: var(--err);
+}
+
+.tile {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tile-img {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--code-bg);
+}
+
+.tile-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cover-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.tile-actions {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 6px;
+  background: linear-gradient(transparent, rgb(0 0 0 / 0.55));
+}
+
+.tile-actions button {
+  min-width: 36px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: rgb(255 255 255 / 0.92);
+  color: #1d1a20;
+  font-weight: 700;
+}
+
+.tile-actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.tile-actions .tile-remove {
+  margin-left: auto;
+  color: #b3261e;
+}
+
+.tile-caption label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin-bottom: 2px;
+}
+
+.tile-pending {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  text-align: center;
+}
+
+.tile-pending progress {
+  width: 80%;
+  accent-color: var(--accent);
+}
+
+.tile-failed {
+  border: 1px solid var(--err);
+}
+
+.tile-add {
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 2px dashed var(--accent);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.tile-add:hover {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.tile-add-plus {
+  font-size: 2rem;
+  line-height: 1;
+}

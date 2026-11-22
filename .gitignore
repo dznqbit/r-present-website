@@ -29,3 +29,6 @@ pnpm-debug.log*
 .preview/
 .preview-next/
 .preview-old/
+
+# admin uploads when S3 is not configured (dev)
+.uploads/

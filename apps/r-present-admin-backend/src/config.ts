@@ -17,6 +17,19 @@ export const config = {
   // site uses root-relative URLs (/images/…) and can't live under a subpath.
   previewDir: path.resolve(process.env.PREVIEW_DIR ?? path.join(siteDir, '..', '..', '.preview')),
   previewPort: Number(process.env.PREVIEW_PORT ?? 8081),
+  uploads: {
+    // When S3_BUCKET is set, photos go to S3 and are served via IMAGES_BASE_URL
+    // (the CloudFront domain). Otherwise they land in a local folder and are
+    // served by this backend, which is only good for development.
+    bucket: process.env.S3_BUCKET ?? null,
+    region: process.env.S3_REGION ?? 'us-west-2',
+    // Key prefix, e.g. "dev/" on a laptop so test uploads stay separate.
+    prefix: process.env.S3_PREFIX ?? '',
+    publicBaseUrl: (process.env.IMAGES_BASE_URL ?? '').replace(/\/+$/, ''),
+    localDir: path.resolve(process.env.LOCAL_UPLOAD_DIR ?? path.join(siteDir, '..', '..', '.uploads')),
+    localBaseUrl: `http://localhost:${Number(process.env.PORT ?? 8787)}/api/media`,
+    maxBytes: 30 * 1024 * 1024,
+  },
   publish: {
     // Publishing pushes a content-only commit on top of <remote>/<branch>.
     remote: process.env.PUBLISH_REMOTE ?? 'origin',

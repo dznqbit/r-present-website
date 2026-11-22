@@ -18,6 +18,11 @@ npm run build && npm start
 | `SITE_DIR` | `../r-present-website`      | Site app whose `src/content/` we edit  |
 | `PREVIEW_DIR` | `<repo>/.preview`        | Where preview builds land               |
 | `PREVIEW_PORT` | `8081`                  | Port the preview is served on (by nginx) |
+| `S3_BUCKET` | (unset) | Bucket for photos. Unset means photos are saved to `.uploads/` locally |
+| `S3_REGION` | `us-west-2` | Bucket region |
+| `S3_PREFIX` | (empty) | Key prefix, e.g. `dev/` on a laptop |
+| `IMAGES_BASE_URL` | (empty) | Public base URL for photos, e.g. `https://images.r-present.com` |
+| `LOCAL_UPLOAD_DIR` | `<repo>/.uploads` | Where photos go without S3 |
 | `PUBLISH_REMOTE` | `origin`              | Remote Publish pushes to                 |
 | `PUBLISH_BRANCH` | `main`                | Branch Publish pushes to                 |
 | `PUBLISH_AUTHOR_NAME` | `R. Present Admin` | Commit author for published changes  |
@@ -35,6 +40,8 @@ npm run build && npm start
 | DELETE | `/api/collections/:collection/entries/:id`   | Delete an entry's file (goes live on the next publish)  |
 | GET    | `/api/preview`                               | Preview build status (`none`/`building`/`ready`/`failed`, `stale`) |
 | POST   | `/api/preview`                               | Start a preview build (no-op if one is running)         |
+| POST   | `/api/uploads?collection=…`                  | Upload a photo (multipart `file`). It's resized, rotated, stripped of EXIF/GPS, stored, and its URL returned |
+| GET    | `/api/media/*`                               | Locally stored photos (dev only, when S3 isn't configured) |
 | GET    | `/api/changes`                               | Saved content entries that differ from what's published |
 | GET    | `/api/publish`                               | Publish status (`idle`/`publishing`/`published`/`failed`) |
 | POST   | `/api/publish`                               | Start publishing (no-op if one is running)              |

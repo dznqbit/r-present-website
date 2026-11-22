@@ -50,6 +50,40 @@ export class ApiError extends Error {
   }
 }
 
+export type Uploaded = { url: string; width: number; height: number; bytes: number }
+
+/**
+ * Upload one photo. Uses XHR rather than fetch because fetch can't report
+ * upload progress, and phone photos on home Wi-Fi to a Pi take a moment.
+ */
+export function uploadImage(
+  collection: string,
+  file: File,
+  onProgress: (fraction: number) => void,
+): Promise<Uploaded> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `/api/uploads?collection=${encodeURIComponent(collection)}`)
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(e.loaded / e.total)
+    }
+    xhr.onload = () => {
+      let body: { error?: string } & Partial<Uploaded> = {}
+      try {
+        body = JSON.parse(xhr.responseText) as typeof body
+      } catch {
+        // fall through to the status check
+      }
+      if (xhr.status >= 200 && xhr.status < 300 && body.url) resolve(body as Uploaded)
+      else reject(new ApiError(body.error ?? `Upload failed (HTTP ${xhr.status})`))
+    }
+    xhr.onerror = () => reject(new ApiError("Couldn't reach the server"))
+    const form = new FormData()
+    form.append('file', file)
+    xhr.send(form)
+  })
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, {
     ...init,

@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { ApiError, api, type Entry, type EntryData, type JsonSchema } from './api'
 import { fieldsFor, fromDraft, toDraft, type Draft, type Field } from './fields'
+import { ImageGallery } from './ImageGallery'
 
 type Props = {
   collection: string
@@ -65,6 +66,14 @@ export function EntryEditor({
   const [skuTouched, setSkuTouched] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
+  // Galleries with uploads still in flight, keyed by field name.
+  const [uploading, setUploading] = useState<Record<string, boolean>>({})
+  const setBusy = useCallback(
+    (field: string, busy: boolean) =>
+      setUploading((u) => (Boolean(u[field]) === busy ? u : { ...u, [field]: busy })),
+    [],
+  )
+  const anyUploading = Object.values(uploading).some(Boolean)
 
   const name = typeof draft.name === 'string' ? draft.name : ''
   // The file name is plumbing she never sees: new entries get it from the name.
@@ -159,13 +168,21 @@ export function EntryEditor({
           error={errors[f.name]}
           // A new entry starts with the cursor in the name.
           autoFocus={creating && f === nameField}
+          collection={collection}
           onChange={(v) => update(f.name, v)}
+          onBusyChange={(busy) => setBusy(f.name, busy)}
         />
       ))}
 
       <footer className="editor-footer">
-        <button type="submit" disabled={!dirty || status.kind === 'saving'}>
-          {status.kind === 'saving' ? 'Saving…' : creating ? `Create ${singular(collection)}` : 'Save'}
+        <button type="submit" disabled={!dirty || status.kind === 'saving' || anyUploading}>
+          {anyUploading
+            ? 'Waiting for photos…'
+            : status.kind === 'saving'
+              ? 'Saving…'
+              : creating
+                ? `Create ${singular(collection)}`
+                : 'Save'}
         </button>
         {!creating && dirty && status.kind === 'idle' && <span className="muted">Unsaved changes</span>}
         {status.kind === 'saved' && <span className="ok">Saved</span>}
@@ -185,12 +202,38 @@ type FieldInputProps = {
   value: string | boolean
   error: string | undefined
   autoFocus?: boolean
+  collection: string
   onChange: (value: string | boolean) => void
+  onBusyChange: (busy: boolean) => void
 }
 
-function FieldInput({ field, value, error, autoFocus = false, onChange }: FieldInputProps) {
+function FieldInput({
+  field,
+  value,
+  error,
+  autoFocus = false,
+  collection,
+  onChange,
+  onBusyChange,
+}: FieldInputProps) {
   const id = `field-${field.name}`
   const text = typeof value === 'string' ? value : ''
+
+  if (field.kind === 'images' || field.kind === 'captionedImages') {
+    return (
+      <ImageGallery
+        id={id}
+        label={field.label}
+        required={field.required}
+        collection={collection}
+        value={text}
+        captioned={field.kind === 'captionedImages'}
+        error={error}
+        onChange={onChange}
+        onBusyChange={onBusyChange}
+      />
+    )
+  }
 
   if (field.kind === 'boolean') {
     return (

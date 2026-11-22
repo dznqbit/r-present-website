@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars and fill in.
+bucket_name = "your-bucket-name"
+aws_region  = "us-west-2"
+
+# images_domain   = "images.r-present.com"
+# route53_zone_id = "Z0123456789ABCDEFG" # only if r-present.com DNS is in Route 53

@@ -13,9 +13,11 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "astro": "^5.15.7"
+    "astro": "^5.15.7",
+    "markdown-it": "^14.3.3"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.2.0",
     "@types/node": "^24.10.1",
     "eslint": "^10.9.1",
     "eslint-config-prettier": "^10.1.8",

@@ -1,4 +1,5 @@
 ---
+import { markdownToText } from "../lib/markdown";
 interface Props {
   sku: string;
   name: string;
@@ -25,7 +26,7 @@ const thumbnail = images[0] || "/placeholder.jpg";
   </div>
 
   <div class="card-footer">
-    <p class="card-description">{description}</p>
+    <p class="card-description">{markdownToText(description)}</p>
     <div class="card-price">
       <span class:list={{ "is-sold": !available }}>
         {price ? `$${price}` : "—"}

@@ -1,4 +1,5 @@
 ---
+import { markdownToText } from "../lib/markdown";
 interface Props {
   id: string;
   name: string;
@@ -21,7 +22,7 @@ const thumbnail = images[0]?.url || "/placeholder.jpg";
     </div>
     <div class="project-info">
       <h3>{name}</h3>
-      <p class="description">{description}</p>
+      <p class="description">{markdownToText(description)}</p>
     </div>
   </a>
 </article>

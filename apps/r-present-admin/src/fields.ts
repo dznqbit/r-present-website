@@ -82,6 +82,7 @@ function hintFor(schema: JsonSchema, kind: FieldKind): string | undefined {
   if (kind === 'lines') return 'One per line'
   if (kind === 'json') return 'JSON'
   if (kind === 'date') return undefined
+  if (kind === 'longtext') return 'Markdown works: **bold**, *italic*, [link](https://…), - lists. Blank line = new paragraph.'
   const formats = formatsOf(schema)
   if (formats.includes('date') || formats.includes('date-time')) return 'Date, e.g. 2026-03-14'
   if (formats.includes('uri')) return 'Full URL, starting with https://'

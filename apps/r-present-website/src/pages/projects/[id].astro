@@ -1,4 +1,5 @@
 ---
+import { renderMarkdown } from "../../lib/markdown";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection, getEntry } from "astro:content";
 
@@ -33,7 +34,7 @@ const relatedProducts = products
       {location && <> &middot; {location}</>}
     </p>
 
-    <p class="description">{description}</p>
+    <div class="description" set:html={renderMarkdown(description)} />
 
     <div class="image-gallery">
       {
@@ -89,6 +90,14 @@ const relatedProducts = products
   .meta {
     color: #666;
     margin: 0 0 2rem 0;
+  }
+
+  .description :global(p) {
+    margin: 0 0 1rem 0;
+  }
+
+  .description :global(:last-child) {
+    margin-bottom: 0;
   }
 
   .description {

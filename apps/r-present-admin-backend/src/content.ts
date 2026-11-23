@@ -83,8 +83,17 @@ function entryPath(collection: string, id: string): string {
   return path.join(contentDir(), collection, `${id}.json`)
 }
 
-export function listCollections(): { name: string; schema: JsonSchema }[] {
-  return [...collections.values()].map(({ name, schema }) => ({ name, schema }))
+export function listCollections(): {
+  name: string
+  schema: JsonSchema
+  writeOnce: string[]
+}[] {
+  return [...collections.values()].map(({ name, schema }) => ({
+    name,
+    schema,
+    // Tells the admin which fields to keep out of the form.
+    writeOnce: WRITE_ONCE.filter((k) => hasProperty(schema, k)),
+  }))
 }
 
 export async function listEntries(collection: string): Promise<Entry[]> {
@@ -108,17 +117,65 @@ export async function saveEntry(
   const file = entryPath(collection, id)
   if (!existsSync(file)) throw new NotFoundError(`No ${collection} entry "${id}"`)
 
-  if (!c.validate(data)) throw new ValidationError((c.validate.errors ?? []).map(toFieldError))
-
   const existing = JSON.parse(await fs.readFile(file, 'utf8')) as Record<string, unknown>
-  const ordered = orderKeys(data, Object.keys(existing), c.schema)
-  const text = await format(JSON.stringify(ordered, null, 2) + '\n', file)
+  const merged = { ...data }
+  // Write-once fields always keep what's on disk, whatever the client sent.
+  for (const key of WRITE_ONCE) {
+    if (key in existing) merged[key] = existing[key]
+    else delete merged[key]
+  }
+  validate(c, merged)
+  return writeEntry(id, file, orderKeys(merged, Object.keys(existing), c.schema))
+}
 
+export async function createEntry(
+  collection: string,
+  id: string,
+  data: Record<string, unknown>,
+): Promise<Entry> {
+  const c = getCollection(collection)
+  const file = entryPath(collection, id)
+  if (existsSync(file)) {
+    throw new ValidationError([{ field: 'id', message: "Something with this name already exists. Try a different name." }])
+  }
+
+  const stamped = { ...data }
+  // Stamp write-once fields now; they're never editable afterwards.
+  if (hasProperty(c.schema, 'createdAt')) stamped.createdAt = new Date().toISOString()
+  validate(c, stamped)
+  return writeEntry(id, file, orderKeys(stamped, [], c.schema))
+}
+
+/** Fields set once by the server on create and never changed by edits. */
+const WRITE_ONCE = ['createdAt'] as const
+
+function hasProperty(schema: JsonSchema, key: string): boolean {
+  return key in ((schema.properties as Record<string, unknown> | undefined) ?? {})
+}
+
+export async function deleteEntry(collection: string, id: string): Promise<void> {
+  getCollection(collection)
+  const file = entryPath(collection, id)
+  if (!existsSync(file)) throw new NotFoundError(`No ${collection} entry "${id}"`)
+  await fs.rm(file)
+}
+
+function validate(c: Collection, data: Record<string, unknown>): void {
+  if (!c.validate(data)) throw new ValidationError((c.validate.errors ?? []).map(toFieldError))
+}
+
+async function writeEntry(
+  id: string,
+  file: string,
+  data: Record<string, unknown>,
+): Promise<Entry> {
+  const text = await format(JSON.stringify(data, null, 2) + '\n', file)
+  await fs.mkdir(path.dirname(file), { recursive: true })
   // Write-then-rename so a crash never leaves a half-written file behind.
   const tmp = `${file}.tmp`
   await fs.writeFile(tmp, text)
   await fs.rename(tmp, file)
-  return { id, data: ordered }
+  return { id, data }
 }
 
 function toFieldError(e: ErrorObject): FieldError {

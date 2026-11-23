@@ -24,3 +24,11 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# admin preview builds
+.preview/
+.preview-next/
+.preview-old/
+
+# admin uploads when S3 is not configured (dev)
+.uploads/

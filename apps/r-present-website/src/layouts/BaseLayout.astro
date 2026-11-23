@@ -32,7 +32,7 @@ const {
 
     <header>
       <nav>
-        <div>
+        <div class="site-title">
           <a href="/" title="Home"
             ><img src="/images/logo.png" height="72" alt="R. Present" /></a
           >
@@ -40,7 +40,7 @@ const {
         <ul>
           <li><a href="/">Home</a></li>
           <li><a href="/projects">Projects</a></li>
-          <li><a href="/categories">Merch</a></li>
+          <li><a href="/categories">Shop</a></li>
           <li><a href="/about">About</a></li>
         </ul>
       </nav>
@@ -186,14 +186,18 @@ const {
     padding: 1rem;
   }
 
+  /* Logo centered on top, links spread evenly across the row below. */
   nav {
     max-width: 1200px;
     margin: 0 auto;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
     gap: 1rem;
+  }
+
+  .site-title {
+    text-align: center;
   }
 
   .logo {
@@ -204,17 +208,24 @@ const {
     background-image: url("/images/logo.png");
   }
 
+  /* Capped at 800px so the links don't drift apart on wide monitors. */
   nav ul {
     list-style: none;
     display: flex;
-    gap: 2rem;
-    margin: 0;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 80px;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
     padding: 0;
   }
 
+  /* Scales with the screen: 1.125rem on phones up to 1.5rem on desktop. */
   nav a {
     text-decoration: none;
     color: #333;
+    font-size: clamp(1.125rem, 1rem + 1vw, 1.5rem);
   }
 
   nav a:hover {
@@ -256,16 +267,6 @@ const {
   }
 
   @media (max-width: 768px) {
-    nav {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    nav ul {
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
     main {
       background-size: 20em;
     }

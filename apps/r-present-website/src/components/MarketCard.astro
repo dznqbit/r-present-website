@@ -1,4 +1,6 @@
 ---
+import { isUpcoming as isUpcomingDate } from "../lib/markets";
+
 interface Props {
   name: string;
   date: Date;
@@ -18,7 +20,7 @@ const formatDate = (date: Date) => {
   }).format(date);
 };
 
-const isUpcoming = date >= new Date();
+const isUpcoming = isUpcomingDate(date);
 ---
 
 <article class="market-card" class:list={[{ past: !isUpcoming }]}>

@@ -11,12 +11,16 @@ type Props = {
   editorDirty: boolean
   /** Called when a publish finishes, so the app can refresh changes and preview. */
   onFinished: () => void
+  /** Called after unpublished edits were thrown away, so the app can reload everything. */
+  onDiscarded: () => void
 }
 
-export function PublishControl({ changes, editorDirty, onFinished }: Props) {
+export function PublishControl({ changes, editorDirty, onFinished, onDiscarded }: Props) {
   const [status, setStatus] = useState<PublishStatus | null>(null)
   const [requestError, setRequestError] = useState<string | null>(null)
   const [now, setNow] = useState(() => Date.now())
+  const [discarding, setDiscarding] = useState(false)
+  const [discardError, setDiscardError] = useState<string | null>(null)
 
   // Pick up an in-progress publish (e.g. started from another tab) on load.
   useEffect(() => {
@@ -65,6 +69,34 @@ export function PublishControl({ changes, editorDirty, onFinished }: Props) {
       .catch((err: unknown) => setRequestError(String(err)))
   }
 
+  const discard = () => {
+    const list = changes.map((c) => `• ${c.collection}/${c.id} (${c.change})`).join('\n')
+    const unsaved = editorDirty ? "\n\nThe form you're editing has unsaved changes too. They'll be lost." : ''
+    const ok = window.confirm(
+      `Throw away all unpublished changes and go back to what's live on r-present.com?\n\n${list}${unsaved}\n\nThis can't be undone.`,
+    )
+    if (!ok) return
+    setDiscarding(true)
+    setDiscardError(null)
+    api
+      .discard()
+      .then(() => {
+        setStatus((s) => (s?.state === 'failed' ? { ...s, state: 'idle', error: null, log: null } : s))
+        onDiscarded()
+      })
+      .catch((err: unknown) => setDiscardError(err instanceof Error ? err.message : String(err)))
+      .finally(() => setDiscarding(false))
+  }
+
+  if (discarding) {
+    return (
+      <div className="publish" role="status" aria-live="polite">
+        <span className="spinner" aria-hidden="true" />
+        <span>Discarding changes…</span>
+      </div>
+    )
+  }
+
   if (publishing) {
     return (
       <div className="publish" role="status" aria-live="polite">
@@ -100,6 +132,21 @@ export function PublishControl({ changes, editorDirty, onFinished }: Props) {
       )}
 
       {requestError && <span className="err">Couldn't reach the server</span>}
+
+      {discardError && (
+        <details className="popover">
+          <summary className="err">Discard failed</summary>
+          <div className="popover-body">
+            <p>{discardError}</p>
+          </div>
+        </details>
+      )}
+
+      {count > 0 && (
+        <button type="button" className="text-btn discard-btn" onClick={discard}>
+          Discard…
+        </button>
+      )}
 
       {count > 0 && (
         <button type="button" className="publish-btn" onClick={start}>

@@ -39,7 +39,11 @@ let commit: PublishStatus['commit'] = null
 let error: string | null = null
 let log: string[] | null = null
 
+let discarding = false
+
 export const isPublishing = () => state === 'publishing'
+/** True while publishing or discarding; content must not change underneath either. */
+export const isBusy = () => state === 'publishing' || discarding
 
 export function getPublishStatus(): PublishStatus {
   return {
@@ -68,7 +72,7 @@ export function startPublish(): PublishStatus {
 }
 
 /** A failure we can explain to a non-developer. */
-class PublishError extends Error {
+export class PublishError extends Error {
   constructor(
     message: string,
     public readonly detail: string[] | null = null,
@@ -203,6 +207,45 @@ async function refuseLocalPhotos(pending: PathChange[]): Promise<void> {
       "Some photos were only saved on this computer, not uploaded to the image server, so they'd be broken on the live site.",
       offenders,
     )
+  }
+}
+
+/**
+ * Throw away every unpublished content edit: make src/content match GitHub's
+ * main exactly. Edited entries go back to their live version, new entries are
+ * deleted, deleted ones come back. Uploaded photos are left in S3.
+ *
+ * Only the working tree is touched (never the checkout's index or branch), so
+ * a later `git pull` on the Pi isn't confused by staged files.
+ */
+export async function discardChanges(): Promise<{ discarded: PathChange[] }> {
+  if (isBusy()) throw new PublishError('Publishing is in progress. Try again in a moment.')
+  discarding = true
+  try {
+    const latest = await fetchLatest()
+    // Diffing against the latest main covers both her drafts and anything
+    // edited on GitHub that hasn't been pulled down yet.
+    const discarded = await workingChangesAgainst(latest)
+    for (const { path: rel, change } of discarded) {
+      const file = path.join(config.siteDir, rel)
+      if (change === 'added') {
+        await fs.rm(file, { force: true })
+      } else {
+        await fs.mkdir(path.dirname(file), { recursive: true })
+        await fs.writeFile(file, await git(['show', `${latest}:./${rel}`]))
+      }
+    }
+    await git(['update-ref', publishedRef(), latest])
+    console.log(`Discarded ${discarded.length} unpublished change(s); content now matches ${latest}`)
+    // A previous publish's "failed" message is about edits that no longer exist.
+    if (state === 'failed') {
+      state = 'idle'
+      error = null
+      log = null
+    }
+    return { discarded }
+  } finally {
+    discarding = false
   }
 }
 

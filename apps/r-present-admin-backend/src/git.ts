@@ -1,4 +1,7 @@
 import { execFile } from 'node:child_process'
+import fs from 'node:fs/promises'
+import os from 'node:os'
+import path from 'node:path'
 import { promisify } from 'node:util'
 import { config } from './config.js'
 
@@ -78,18 +81,29 @@ function parseNameStatus(out: string): PathChange[] {
   return result
 }
 
-/** Content files in the working tree that differ from `rev`, including new files. */
+/**
+ * Content files in the working tree that differ from `rev`, including new files.
+ *
+ * Compared through a throwaway index seeded from `rev`, not the checkout's own
+ * index: on the Pi the checked-out commit never moves (publishing commits on
+ * the side), so the real index lags behind and would report entries that were
+ * published or synced since as both "deleted" and "added".
+ */
 export async function workingChangesAgainst(rev: string): Promise<PathChange[]> {
-  const tracked = parseNameStatus(
-    await git(['diff', '--name-status', '--relative', '--no-renames', '-z', rev, '--', CONTENT_PATHSPEC]),
-  )
-  const untracked = (
-    await git(['ls-files', '--others', '--exclude-standard', '-z', '--', CONTENT_PATHSPEC])
-  )
-    .split('\0')
-    .filter(Boolean)
-    .map((path): PathChange => ({ path, change: 'added' }))
-  return [...tracked, ...untracked]
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'r-present-diff-'))
+  const env = { GIT_INDEX_FILE: path.join(tmp, 'index') }
+  try {
+    await git(['read-tree', rev], env)
+    await git(['add', '--all', '--', CONTENT_PATHSPEC], env)
+    return parseNameStatus(
+      await git(
+        ['diff', '--cached', '--name-status', '--relative', '--no-renames', '-z', rev, '--', CONTENT_PATHSPEC],
+        env,
+      ),
+    )
+  } finally {
+    await fs.rm(tmp, { recursive: true, force: true })
+  }
 }
 
 /** Content files that differ between two commits. */

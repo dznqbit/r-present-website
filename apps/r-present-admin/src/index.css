@@ -775,3 +775,13 @@ button {
   font-size: 2rem;
   line-height: 1;
 }
+
+/* Quiet on purpose: Publish is the main action, Discard the escape hatch. */
+.discard-btn {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.discard-btn:hover {
+  color: var(--err);
+}

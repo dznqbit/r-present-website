@@ -6,6 +6,7 @@
   "description": "Sterling silver cuff bracelet with natural turquoise stone centerpiece. Adjustable to fit most wrist sizes. Stone sourced from Arizona.",
   "available": true,
   "images": [
+    "http://localhost:8787/api/media/products/0237c0145177dfc2d253.jpg",
     "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=800&q=80"
   ],
   "price": 95

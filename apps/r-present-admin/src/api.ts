@@ -119,6 +119,7 @@ export const api = {
   changes: () => request<Change[]>('/changes'),
   publishStatus: () => request<PublishStatus>('/publish'),
   startPublish: () => request<PublishStatus>('/publish', { method: 'POST' }),
+  discard: () => request<{ discarded: unknown[] }>('/discard', { method: 'POST' }),
   previewStatus: () => request<PreviewStatus>('/preview'),
   startPreview: () => request<PreviewStatus>('/preview', { method: 'POST' }),
 }

@@ -20,6 +20,8 @@ deploy key `~/.ssh/r-present-deploy`. That key has write access to this repo onl
 ssh 192.168.0.16 /srv/r-present/repo/devops/pi/deploy.sh
 ```
 
+It stops without changing anything if the admin has unpublished changes. Publish them, or click **Discard…** in the admin to throw them away, then run it again.
+
 ## First-time setup (already done)
 
 1. Install Node 24 to `/opt/node`.

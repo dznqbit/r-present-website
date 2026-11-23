@@ -17,7 +17,7 @@ import {
   ValidationError,
 } from './content.js'
 import { getPreviewStatus, initPreview, startPreview } from './preview.js'
-import { getPublishStatus, isPublishing, startPublish } from './publish.js'
+import { discardChanges, getPublishStatus, isBusy, PublishError, startPublish } from './publish.js'
 import { localUploadPath, UnsupportedImageError, uploadImage, usingLocalUploads } from './uploads.js'
 
 const app = new Hono().basePath('/api')
@@ -28,6 +28,7 @@ app.onError((err, c) => {
   if (err instanceof ValidationError) return c.json({ error: err.message, errors: err.errors }, 400)
   if (err instanceof NotFoundError) return c.json({ error: err.message }, 404)
   if (err instanceof UnsupportedImageError) return c.json({ error: err.message }, 400)
+  if (err instanceof PublishError) return c.json({ error: err.message, detail: err.detail }, 409)
   console.error(err)
   return c.json({ error: 'Internal error' }, 500)
 })
@@ -51,14 +52,14 @@ async function jsonObject(c: Context): Promise<Record<string, unknown>> {
 }
 
 app.put('/collections/:collection/entries/:id', async (c) => {
-  if (isPublishing()) return c.json({ error: busy }, 409)
+  if (isBusy()) return c.json({ error: busy }, 409)
   const entry = await saveEntry(c.req.param('collection'), c.req.param('id'), await jsonObject(c))
   return c.json(entry)
 })
 
 // Body: { id, data }
 app.post('/collections/:collection/entries', async (c) => {
-  if (isPublishing()) return c.json({ error: busy }, 409)
+  if (isBusy()) return c.json({ error: busy }, 409)
   const body = await jsonObject(c)
   const { id, data } = body
   if (typeof id !== 'string' || typeof data !== 'object' || data === null || Array.isArray(data)) {
@@ -69,7 +70,7 @@ app.post('/collections/:collection/entries', async (c) => {
 })
 
 app.delete('/collections/:collection/entries/:id', async (c) => {
-  if (isPublishing()) return c.json({ error: busy }, 409)
+  if (isBusy()) return c.json({ error: busy }, 409)
   await deleteEntry(c.req.param('collection'), c.req.param('id'))
   return c.body(null, 204)
 })
@@ -107,7 +108,13 @@ app.get('/changes', async (c) => c.json(await listChanges()))
 
 app.get('/publish', (c) => c.json(getPublishStatus()))
 
-app.post('/publish', (c) => c.json(startPublish(), 202))
+app.post('/publish', (c) => {
+  if (isBusy() && getPublishStatus().state !== 'publishing') return c.json({ error: busy }, 409)
+  return c.json(startPublish(), 202)
+})
+
+// Throw away all unpublished edits and match what's live on GitHub.
+app.post('/discard', async (c) => c.json(await discardChanges()))
 
 app.get('/preview', async (c) => c.json(await getPreviewStatus()))
 

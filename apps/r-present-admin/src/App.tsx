@@ -17,6 +17,8 @@ function App() {
   const [creating, setCreating] = useState(false)
   const [dirty, setDirty] = useState(false)
   const [contentVersion, setContentVersion] = useState(0)
+  // Bumped when content changes underneath the form (discard), forcing a remount.
+  const [resetVersion, setResetVersion] = useState(0)
   const [changes, setChanges] = useState<Change[]>([])
   const [error, setError] = useState<string | null>(null)
 
@@ -83,6 +85,15 @@ function App() {
     if (active) api.entries(active).then(setEntries).catch(() => {})
   }, [active])
 
+  const onDiscarded = useCallback(() => {
+    // The form's draft is gone along with everything else; reload from disk.
+    setDirty(false)
+    setCreating(false)
+    setResetVersion((v) => v + 1)
+    setContentVersion((v) => v + 1)
+    if (active) api.entries(active).then(setEntries).catch(() => {})
+  }, [active])
+
   /** Switch to a collection, optionally opening an entry or a blank new one. */
   const go = (collection: string | null, opts: { id?: string; create?: boolean } = {}) =>
     guard(() => {
@@ -122,7 +133,12 @@ function App() {
         <div className="topbar-right">
           <PreviewButton contentVersion={contentVersion} />
           {/* Publish is the final step, so it sits at the far right. */}
-          <PublishControl changes={changes} editorDirty={dirty} onFinished={onPublishFinished} />
+          <PublishControl
+            changes={changes}
+            editorDirty={dirty}
+            onFinished={onPublishFinished}
+            onDiscarded={onDiscarded}
+          />
         </div>
       </header>
 
@@ -181,7 +197,7 @@ function App() {
             {collection && (selected || creating) ? (
               <EntryEditor
                 // Remount per entry so form state resets cleanly.
-                key={`${collection.name}/${creating ? '+new' : selected?.id}`}
+                key={`${collection.name}/${creating ? '+new' : selected?.id}/${resetVersion}`}
                 collection={collection.name}
                 schema={collection.schema}
                 hidden={collection.writeOnce}

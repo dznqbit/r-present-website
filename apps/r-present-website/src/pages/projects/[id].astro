@@ -54,7 +54,9 @@ const relatedProducts = products
           <div class="related-products-grid">
             {relatedProducts.map((product) => (
               <a href={`/products/${product.id}`} class="related-product">
-                <img src={product.data.images[0]} alt={product.data.name} />
+                {product.data.images[0] && (
+                  <img src={product.data.images[0]} alt={product.data.name} />
+                )}
                 <span>{product.data.name}</span>
               </a>
             ))}

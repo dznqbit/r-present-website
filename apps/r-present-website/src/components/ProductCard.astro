@@ -11,7 +11,8 @@ interface Props {
 }
 
 const { sku, name, description, available, images, price } = Astro.props;
-const thumbnail = images[0] || "/placeholder.jpg";
+// No photo yet: the image box stays empty (grey) instead of a broken image.
+const thumbnail = images[0];
 ---
 
 <article class="product-card">
@@ -22,7 +23,7 @@ const thumbnail = images[0] || "/placeholder.jpg";
   </div>
 
   <div class="card-image">
-    <img src={thumbnail} alt={name} loading="lazy" />
+    {thumbnail && <img src={thumbnail} alt={name} loading="lazy" />}
   </div>
 
   <div class="card-footer">

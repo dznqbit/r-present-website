@@ -11,6 +11,13 @@ Monorepo for R. Present, a Seattle handmade jewelry business.
 
 Each app is independent: `cd` into it and `npm install`.
 
+## Running the app locally
+
+```sh
+# 1. Website UI: http://localhost:4321
+cd apps/r-present-website && npm run dev
+```
+
 ## Running the admin locally
 
 Three processes, one terminal tab each, all from the repo root (run `npm install` in each app first):

@@ -1,15 +1,10 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import MarketCard from "../components/MarketCard.astro";
-import { getCollection } from "astro:content";
+import { getPastMarkets, getUpcomingMarkets } from "../lib/markets";
 
-const markets = await getCollection("markets");
-const sortedMarkets = markets.sort(
-  (a, b) => a.data.date.getTime() - b.data.date.getTime(),
-);
-
-const upcomingMarkets = sortedMarkets.filter((m) => m.data.date >= new Date());
-const pastMarkets = sortedMarkets.filter((m) => m.data.date < new Date());
+const upcomingMarkets = await getUpcomingMarkets();
+const pastMarkets = await getPastMarkets(6);
 ---
 
 <BaseLayout
@@ -37,12 +32,9 @@ const pastMarkets = sortedMarkets.filter((m) => m.data.date < new Date());
       <>
         <h2>Past Markets</h2>
         <div class="markets-grid">
-          {pastMarkets
-            .reverse()
-            .slice(0, 6)
-            .map((market) => (
-              <MarketCard {...market.data} />
-            ))}
+          {pastMarkets.map((market) => (
+            <MarketCard {...market.data} />
+          ))}
         </div>
       </>
     )

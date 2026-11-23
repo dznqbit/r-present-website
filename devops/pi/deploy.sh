@@ -51,6 +51,9 @@ git update-ref "$PUBLISHED" HEAD
 
 echo "== website deps (astro sync, prettier, preview builds)"
 (cd apps/r-present-website && npm ci --no-audit --no-fund)
+# Regenerate the content schemas the admin's forms are built from, so new or
+# changed fields show up after the restart below.
+(cd apps/r-present-website && npx astro sync)
 
 echo "== backend"
 (cd apps/r-present-admin-backend && npm ci --no-audit --no-fund && npm run build)

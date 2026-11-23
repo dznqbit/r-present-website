@@ -31,6 +31,8 @@ const projects = defineCollection({
   type: "data",
   schema: z.object({
     name: z.string(),
+    // Display order on the home page: lower numbers come first.
+    index: z.number().int(),
     date: z.coerce.date(),
     description: z.string(),
     images: z.array(

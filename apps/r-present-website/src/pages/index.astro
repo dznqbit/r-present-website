@@ -1,10 +1,15 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { formatShortMarketDate, getUpcomingMarkets } from "../lib/markets";
+import { getProjectsByIndex } from "../lib/projects";
 
 // Get unique categories from products
 const products = await getCollection("products");
 const categories = [...new Set(products.map((p) => p.data.category))].sort();
+
+const upcomingMarkets = await getUpcomingMarkets(3);
+const projects = await getProjectsByIndex();
 ---
 
 <BaseLayout
@@ -16,15 +21,41 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
     <p class="tagline">Handcrafted jewelry, made in America</p>
   </section>
 
-  <section class="collection">
-    <h1>Mod bodies</h1>
-  </section>
+  {
+    projects.length > 0 && (
+      <section class="projects">
+        {projects.map((project) => (
+          <div class="project">
+            <a class="project-link" href={`/projects/${project.id}`}>
+              <h2>{project.data.name}</h2>
+            </a>
+          </div>
+        ))}
+      </section>
+    )
+  }
 
   <section class="quick-links">
     <div class="link-card">
-      <h2>Upcoming Markets</h2>
-      <p>Find us at local markets and events</p>
-      <a href="/markets" class="button">View Markets</a>
+      <h2><a class="text-link" href="/markets">Upcoming Markets</a></h2>
+      {
+        upcomingMarkets.length > 0 ? (
+          <ul class="market-list">
+            {upcomingMarkets.map((market) => (
+              <li>
+                <span class="market-date">
+                  {formatShortMarketDate(market.data.date)} ·{" "}
+                  {market.data.timeDescription}
+                </span>
+                <span class="market-name">{market.data.name}</span>
+                <span class="market-details">{market.data.location}</span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No markets scheduled right now. Check back soon!</p>
+        )
+      }
     </div>
 
     <div class="link-card">
@@ -58,10 +89,28 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
     font-weight: 300;
   }
 
-  .collection {
-    border: 2px solid black;
+  .projects {
     margin: 40px 0;
     padding: 20px;
+  }
+
+  .project {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project h2 {
+    margin: 0;
+    font-size: 2rem;
+  }
+
+  .project-link,
+  .project-link:visited {
+    align-self: flex-end;
+    color: black;
+    text-decoration: none;
+    border-bottom: 2px solid #d15128;
+    padding-bottom: 2px;
   }
 
   .tagline {
@@ -106,6 +155,53 @@ const categories = [...new Set(products.map((p) => p.data.category))].sort();
 
   .button:hover {
     background: #555;
+  }
+
+  /* Plain black link: no purple once visited, underline only on hover. */
+  .text-link,
+  .text-link:visited {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .text-link:hover {
+    text-decoration: underline;
+  }
+
+  .market-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .market-list li {
+    display: flex;
+    flex-direction: column;
+    padding: 0.75rem 0;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .market-list li:first-child {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .market-date {
+    font-size: 0.875rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #333;
+  }
+
+  .market-name {
+    font-size: 1.125rem;
+  }
+
+  .market-details {
+    font-size: 0.875rem;
+    color: #666;
   }
 
   .category-list {

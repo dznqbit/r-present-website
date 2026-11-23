@@ -82,6 +82,7 @@ function hintFor(schema: JsonSchema, kind: FieldKind): string | undefined {
   if (kind === 'lines') return 'One per line'
   if (kind === 'json') return 'JSON'
   if (kind === 'date') return undefined
+  if (kind === 'longtext') return 'Markdown works: **bold**, *italic*, [link](https://…), - lists. Blank line = new paragraph.'
   const formats = formatsOf(schema)
   if (formats.includes('date') || formats.includes('date-time')) return 'Date, e.g. 2026-03-14'
   if (formats.includes('uri')) return 'Full URL, starting with https://'
@@ -162,8 +163,10 @@ export function fromDraft(
 
     if (f.kind === 'images' || f.kind === 'captionedImages') {
       const list = text ? (JSON.parse(text) as unknown[]) : []
+      // No photos is fine (the site shows an empty box). Required galleries
+      // still need the key, so save an empty list rather than leaving it out.
       if (list.length === 0) {
-        if (f.required) errors[f.name] = 'needs at least one photo'
+        if (f.required) data[f.name] = []
         continue
       }
       data[f.name] = list

@@ -1,4 +1,5 @@
 ---
+import { markdownToText } from "../lib/markdown";
 interface Props {
   id: string;
   name: string;
@@ -7,21 +8,26 @@ interface Props {
 }
 
 const { id, name, description, images } = Astro.props;
-const thumbnail = images[0]?.url || "/placeholder.jpg";
+// No photo yet: the image box stays empty (grey) instead of a broken image.
+const thumbnail = images[0]?.url;
 ---
 
 <article class="project-card">
   <a href={`/projects/${id}`}>
     <div class="image-container">
-      <img
-        src={thumbnail}
-        alt={images[0]?.description || name}
-        loading="lazy"
-      />
+      {
+        thumbnail && (
+          <img
+            src={thumbnail}
+            alt={images[0]?.description || name}
+            loading="lazy"
+          />
+        )
+      }
     </div>
     <div class="project-info">
       <h3>{name}</h3>
-      <p class="description">{description}</p>
+      <p class="description">{markdownToText(description)}</p>
     </div>
   </a>
 </article>

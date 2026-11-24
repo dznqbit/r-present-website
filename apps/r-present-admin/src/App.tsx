@@ -4,7 +4,7 @@ import { EntryEditor } from './EntryEditor'
 import { Home } from './Home'
 import { PreviewButton } from './PreviewButton'
 import { PublishControl } from './PublishControl'
-import { UnpublishedDot } from './UnpublishedDot'
+import { Sidebar } from './Sidebar'
 
 const UNSAVED_PROMPT = 'You have unsaved changes. Discard them?'
 
@@ -12,7 +12,10 @@ function App() {
   const [collections, setCollections] = useState<Collection[]>([])
   // null = the index page.
   const [active, setActive] = useState<string | null>(null)
-  const [entries, setEntries] = useState<Entry[]>([])
+  const [entriesBy, setEntriesBy] = useState<Record<string, Entry[] | undefined>>({})
+  // Expanded sidebar sections. Navigating opens the target section; the user
+  // can close it (or open others) freely afterwards.
+  const [open, setOpen] = useState<Set<string>>(() => new Set())
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [dirty, setDirty] = useState(false)
@@ -22,20 +25,24 @@ function App() {
   const [changes, setChanges] = useState<Change[]>([])
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    api
-      .collections()
-      .then(setCollections)
-      .catch((err: unknown) => setError(`Couldn't reach the backend: ${String(err)}`))
+  const loadEntries = useCallback((names: string[]) => {
+    for (const name of names) {
+      api
+        .entries(name)
+        .then((es) => setEntriesBy((prev) => ({ ...prev, [name]: es })))
+        .catch((err: unknown) => setError(String(err)))
+    }
   }, [])
 
   useEffect(() => {
-    if (!active) return
     api
-      .entries(active)
-      .then(setEntries)
-      .catch((err: unknown) => setError(String(err)))
-  }, [active])
+      .collections()
+      .then((cs) => {
+        setCollections(cs)
+        loadEntries(cs.map((c) => c.name))
+      })
+      .catch((err: unknown) => setError(`Couldn't reach the backend: ${String(err)}`))
+  }, [loadEntries])
 
   // Saved-but-unpublished edits, refreshed after every save.
   useEffect(() => {
@@ -59,31 +66,48 @@ function App() {
     action()
   }
 
-  const onSaved = useCallback((saved: Entry, created: boolean) => {
-    setEntries((es) =>
-      created
-        ? [...es, saved].sort((a, b) => a.id.localeCompare(b.id))
-        : es.map((e) => (e.id === saved.id ? saved : e)),
-    )
-    if (created) {
-      setCreating(false)
-      setSelectedId(saved.id)
-    }
-    setContentVersion((v) => v + 1)
-  }, [])
+  const onSaved = useCallback(
+    (saved: Entry, created: boolean) => {
+      if (!active) return
+      setEntriesBy((prev) => {
+        const es = prev[active] ?? []
+        return {
+          ...prev,
+          [active]: created
+            ? [...es, saved].sort((a, b) => a.id.localeCompare(b.id))
+            : es.map((e) => (e.id === saved.id ? saved : e)),
+        }
+      })
+      if (created) {
+        setCreating(false)
+        setSelectedId(saved.id)
+      }
+      setContentVersion((v) => v + 1)
+    },
+    [active],
+  )
 
-  const onDeleted = useCallback((id: string) => {
-    setEntries((es) => es.filter((e) => e.id !== id))
-    setSelectedId(null)
-    setContentVersion((v) => v + 1)
-  }, [])
+  const onDeleted = useCallback(
+    (id: string) => {
+      if (!active) return
+      setEntriesBy((prev) => ({ ...prev, [active]: (prev[active] ?? []).filter((e) => e.id !== id) }))
+      setSelectedId(null)
+      setContentVersion((v) => v + 1)
+    },
+    [active],
+  )
+
+  const reloadAll = useCallback(
+    () => loadEntries(collections.map((c) => c.name)),
+    [collections, loadEntries],
+  )
 
   const onPublishFinished = useCallback(() => {
     // Refresh the unpublished list and the preview status (publish may have
     // rebuilt it and pulled down edits made on GitHub).
     setContentVersion((v) => v + 1)
-    if (active) api.entries(active).then(setEntries).catch(() => {})
-  }, [active])
+    reloadAll()
+  }, [reloadAll])
 
   const onDiscarded = useCallback(() => {
     // The form's draft is gone along with everything else; reload from disk.
@@ -91,23 +115,31 @@ function App() {
     setCreating(false)
     setResetVersion((v) => v + 1)
     setContentVersion((v) => v + 1)
-    if (active) api.entries(active).then(setEntries).catch(() => {})
-  }, [active])
+    reloadAll()
+  }, [reloadAll])
 
   /** Switch to a collection, optionally opening an entry or a blank new one. */
   const go = (collection: string | null, opts: { id?: string; create?: boolean } = {}) =>
     guard(() => {
-      if (collection !== active) setEntries([])
       setActive(collection)
       setSelectedId(opts.id ?? null)
       setCreating(opts.create ?? false)
+      if (collection) setOpen((prev) => (prev.has(collection) ? prev : new Set(prev).add(collection)))
+    })
+
+  const toggle = (collection: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev)
+      if (next.has(collection)) next.delete(collection)
+      else next.add(collection)
+      return next
     })
 
   const changed = (collection: string, id?: string) =>
     changes.some((c) => c.collection === collection && (id === undefined || c.id === id))
 
   const collection = collections.find((c) => c.name === active)
-  const selected = entries.find((e) => e.id === selectedId)
+  const selected = active ? entriesBy[active]?.find((e) => e.id === selectedId) : undefined
 
   return (
     <div className="app">
@@ -117,19 +149,6 @@ function App() {
             R. Present Admin
           </button>
         </h1>
-        <nav className="tabs">
-          {collections.map((c) => (
-            <button
-              key={c.name}
-              type="button"
-              className={c.name === active ? 'tab active' : 'tab'}
-              onClick={() => c.name !== active && go(c.name)}
-            >
-              {c.name}
-              {changed(c.name) && <UnpublishedDot />}
-            </button>
-          ))}
-        </nav>
         <div className="topbar-right">
           <PreviewButton contentVersion={contentVersion} />
           {/* Publish is the final step, so it sits at the far right. */}
@@ -144,55 +163,32 @@ function App() {
 
       {error && <p className="banner err">{error}</p>}
 
-      {active === null ? (
-        <main className="home-main">
-          <Home
-            contentVersion={contentVersion}
-            isChanged={(c, id) => changed(c, id)}
+      <div className="layout">
+        <aside className="list">
+          <Sidebar
+            collections={collections}
+            entriesBy={entriesBy}
+            open={open}
+            onToggle={toggle}
+            active={active}
+            selectedId={selectedId}
+            creating={creating}
+            isChanged={changed}
             onOpen={(c, id) => go(c, { id })}
             onCreate={(c) => go(c, { create: true })}
           />
-        </main>
-      ) : (
-        <div className="layout">
-          <aside className="list">
-            {collection && !collection.fixed && (
-              <button
-                type="button"
-                className={creating ? 'list-item new-item active' : 'list-item new-item'}
-                onClick={() =>
-                  !creating &&
-                  guard(() => {
-                    setSelectedId(null)
-                    setCreating(true)
-                  })
-                }
-              >
-                + New {collection.name.replace(/s$/, '')}
-              </button>
-            )}
-            {entries.map((e) => (
-              <button
-                key={e.id}
-                type="button"
-                className={e.id === selectedId ? 'list-item active' : 'list-item'}
-                onClick={() =>
-                  e.id !== selectedId &&
-                  guard(() => {
-                    setCreating(false)
-                    setSelectedId(e.id)
-                  })
-                }
-              >
-                <span className="list-item-name">
-                  {typeof e.data.name === 'string' ? e.data.name : e.id}
-                  {active && changed(active, e.id) && <UnpublishedDot />}
-                </span>
-                {e.data.available === false && <span className="badge">sold</span>}
-              </button>
-            ))}
-          </aside>
+        </aside>
 
+        {active === null ? (
+          <main className="home-main">
+            <Home
+              contentVersion={contentVersion}
+              isChanged={(c, id) => changed(c, id)}
+              onOpen={(c, id) => go(c, { id })}
+              onCreate={(c) => go(c, { create: true })}
+            />
+          </main>
+        ) : (
           <main className="detail">
             {collection && (selected || creating) ? (
               <EntryEditor
@@ -211,8 +207,8 @@ function App() {
               <p className="muted">Pick something on the left to edit.</p>
             )}
           </main>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

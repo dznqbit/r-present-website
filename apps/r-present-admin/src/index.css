@@ -93,29 +93,6 @@ button {
   background: var(--panel);
 }
 
-.tabs {
-  display: flex;
-  gap: 4px;
-}
-
-.tab {
-  border: 1px solid transparent;
-  background: none;
-  color: var(--text);
-  padding: 6px 12px;
-  border-radius: 999px;
-  text-transform: capitalize;
-}
-
-.tab:hover {
-  background: var(--accent-soft);
-}
-
-.tab.active {
-  background: var(--accent);
-  color: var(--accent-fg);
-}
-
 .banner {
   margin: 0;
   padding: 8px 16px;
@@ -145,6 +122,76 @@ button {
     border-bottom: none;
     border-right: 1px solid var(--border);
   }
+}
+
+/* Sidebar accordion: one collapsible section per collection. */
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 6px;
+  text-align: left;
+  font-weight: 700;
+}
+
+.section-header:hover {
+  background: var(--accent-soft);
+}
+
+.section-header.current .section-title {
+  color: var(--accent);
+}
+
+.section-title {
+  text-transform: capitalize;
+}
+
+.section-count {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.chevron {
+  display: inline-block;
+  width: 0.75em;
+  font-size: 1.35rem;
+  line-height: 1;
+  text-align: center;
+  color: var(--muted);
+  transition: transform 120ms ease;
+}
+
+.section-header[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+.section-body {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0 12px 12px;
+}
+
+.section-note {
+  margin: 4px 12px;
 }
 
 .list-item {
@@ -299,15 +346,6 @@ button {
   height: 8px;
   border-radius: 50%;
   background: var(--unpublished);
-}
-
-.tab .dot {
-  margin-left: 6px;
-  vertical-align: middle;
-}
-
-.tab.active .dot {
-  background: var(--accent-fg);
 }
 
 .list-item-name {

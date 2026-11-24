@@ -46,8 +46,20 @@ const projects = defineCollection({
   }),
 });
 
+// Fixed site pages (e.g. about.json). The admin edits them but can't add or
+// delete them, since each one backs a hand-built page.
+const pages = defineCollection({
+  type: "data",
+  schema: z.object({
+    name: z.string(),
+    // Markdown.
+    body: z.string(),
+  }),
+});
+
 export const collections = {
   products,
   markets,
   projects,
+  pages,
 };

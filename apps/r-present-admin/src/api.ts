@@ -12,6 +12,8 @@ export type Collection = {
   schema: JsonSchema
   /** Fields the server sets once on create (e.g. createdAt); never shown in forms. */
   writeOnce: string[]
+  /** Entries back fixed site pages: editable, but no New or Delete. */
+  fixed: boolean
 }
 export type EntryData = Record<string, unknown>
 export type Entry = { id: string; data: EntryData }

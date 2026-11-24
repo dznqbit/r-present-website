@@ -156,7 +156,7 @@ function App() {
       ) : (
         <div className="layout">
           <aside className="list">
-            {collection && (
+            {collection && !collection.fixed && (
               <button
                 type="button"
                 className={creating ? 'list-item new-item active' : 'list-item new-item'}
@@ -201,6 +201,7 @@ function App() {
                 collection={collection.name}
                 schema={collection.schema}
                 hidden={collection.writeOnce}
+                fixed={collection.fixed}
                 entry={creating ? null : (selected ?? null)}
                 onSaved={onSaved}
                 onDeleted={onDeleted}

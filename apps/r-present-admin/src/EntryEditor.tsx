@@ -8,6 +8,8 @@ type Props = {
   schema: JsonSchema
   /** Fields the server manages (e.g. createdAt); kept out of the form. */
   hidden: string[]
+  /** Fixed site page: no Delete button. */
+  fixed: boolean
   /** null = creating a new entry. */
   entry: Entry | null
   onSaved: (entry: Entry, created: boolean) => void
@@ -44,6 +46,7 @@ export function EntryEditor({
   collection,
   schema,
   hidden,
+  fixed,
   entry,
   onSaved,
   onDeleted,
@@ -187,7 +190,7 @@ export function EntryEditor({
         {!creating && dirty && status.kind === 'idle' && <span className="muted">Unsaved changes</span>}
         {status.kind === 'saved' && <span className="ok">Saved</span>}
         {status.kind === 'error' && <span className="err">{status.message}</span>}
-        {!creating && (
+        {!creating && !fixed && (
           <button type="button" className="danger" onClick={remove}>
             Delete
           </button>

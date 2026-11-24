@@ -35,7 +35,7 @@ export type Field = {
 export type DraftValue = string | boolean
 export type Draft = Record<string, DraftValue>
 
-const LONG_TEXT_FIELDS = new Set(['description'])
+const LONG_TEXT_FIELDS = new Set(['description', 'body'])
 
 const isString = (s: JsonSchema) => s.type === 'string'
 const formatsOf = (s: JsonSchema) => s.anyOf?.map((x) => x.format) ?? [s.format]

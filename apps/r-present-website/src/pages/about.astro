@@ -1,5 +1,11 @@
 ---
+import { getEntry } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
+import { renderMarkdown } from "../lib/markdown";
+
+// Text lives in src/content/pages/about.json so the admin can edit it.
+const about = await getEntry("pages", "about");
+if (!about) throw new Error("Missing src/content/pages/about.json");
 ---
 
 <BaseLayout
@@ -11,34 +17,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
       <div class="col-1">
         <img src="/images/artist.jpg" alt="About the artist" />
       </div>
-      <div class="col-2">
-        <p>
-          Hi, this is R.<br />
-          Welcome to my Art Project, coping mechanism, side hustle, hobby, time, money,
-          and energy investment sample register.
-        </p>
-        <p>
-          Seattle, 2024; what began as a quiet exploration evolved through
-          jewelry school @PRATT, and many looong hours of experimentation at my
-          little home studio, a space where ideas take shape.
-        </p>
-        <p>
-          Tons of local markets, many unique individual pieces, and looots of
-          human support; today, an artistic collective, @Siderail, welcomed me
-          to nourish and inspire my practice, and I'll keep going.
-        </p>
-        <p>
-          Jewelry, for me, is a form of <strong>representation</strong>: every
-          piece is a little story, a feeling, a <em>fragment of identity</em>.
-        </p>
-
-        <p>
-          Love,<br />
-          Rhina Navas,<br />R.
-        </p>
-
-        <h2>r.Presenting!!!!</h2>
-      </div>
+      <div class="col-2 bio" set:html={renderMarkdown(about.data.body)} />
     </section>
 
     <section>
@@ -85,7 +64,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     margin: 0 0 2rem 0;
   }
 
-  h2 {
+  /* .bio's markup comes from Markdown, so its tags need :global(). */
+  h2,
+  .bio :global(h2) {
     font-size: 1.75rem;
     margin: 2rem 0 1rem 0;
   }
@@ -94,7 +75,8 @@ import BaseLayout from "../layouts/BaseLayout.astro";
     margin-bottom: 2rem;
   }
 
-  p {
+  p,
+  .bio :global(p) {
     line-height: 1.6;
     color: #444;
     margin: 1rem 0;

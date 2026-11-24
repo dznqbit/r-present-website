@@ -83,16 +83,31 @@ function entryPath(collection: string, id: string): string {
   return path.join(contentDir(), collection, `${id}.json`)
 }
 
+/**
+ * Collections whose entries each back a hand-built site page (pages/about.json
+ * → /about). They can be edited, but not created or deleted.
+ */
+const FIXED_COLLECTIONS = new Set(['pages'])
+
+function assertNotFixed(collection: string, action: string): void {
+  if (FIXED_COLLECTIONS.has(collection)) {
+    throw new ValidationError([{ field: 'id', message: `Pages can't be ${action}.` }])
+  }
+}
+
 export function listCollections(): {
   name: string
   schema: JsonSchema
   writeOnce: string[]
+  fixed: boolean
 }[] {
   return [...collections.values()].map(({ name, schema }) => ({
     name,
     schema,
     // Tells the admin which fields to keep out of the form.
     writeOnce: WRITE_ONCE.filter((k) => hasProperty(schema, k)),
+    // Tells the admin to hide New and Delete.
+    fixed: FIXED_COLLECTIONS.has(name),
   }))
 }
 
@@ -134,6 +149,7 @@ export async function createEntry(
   data: Record<string, unknown>,
 ): Promise<Entry> {
   const c = getCollection(collection)
+  assertNotFixed(collection, 'added')
   const file = entryPath(collection, id)
   if (existsSync(file)) {
     throw new ValidationError([{ field: 'id', message: "Something with this name already exists. Try a different name." }])
@@ -155,6 +171,7 @@ function hasProperty(schema: JsonSchema, key: string): boolean {
 
 export async function deleteEntry(collection: string, id: string): Promise<void> {
   getCollection(collection)
+  assertNotFixed(collection, 'deleted')
   const file = entryPath(collection, id)
   if (!existsSync(file)) throw new NotFoundError(`No ${collection} entry "${id}"`)
   await fs.rm(file)

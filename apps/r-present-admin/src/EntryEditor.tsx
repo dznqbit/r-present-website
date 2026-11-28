@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ApiError, api, type Entry, type EntryData, type JsonSchema } from './api'
 import { fieldsFor, fromDraft, toDraft, type Draft, type Field } from './fields'
 import { ImageGallery } from './ImageGallery'
@@ -69,6 +69,13 @@ export function EntryEditor({
   const [skuTouched, setSkuTouched] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
+
+  // The Save button reads "Saved" for a moment, then goes back to normal.
+  useEffect(() => {
+    if (status.kind !== 'saved') return
+    const timer = setTimeout(() => setStatus({ kind: 'idle' }), 1000)
+    return () => clearTimeout(timer)
+  }, [status])
   // Galleries with uploads still in flight, keyed by field name.
   const [uploading, setUploading] = useState<Record<string, boolean>>({})
   const setBusy = useCallback(
@@ -150,7 +157,7 @@ export function EntryEditor({
   const remove = async () => {
     if (!entry) return
     const label = typeof entry.data.name === 'string' ? entry.data.name : 'this'
-    const ok = window.confirm(`Delete "${label}"?\n\nIt stays on r-present.com until you publish.`)
+    const ok = window.confirm(`Are you sure you want to delete ${label}?`)
     if (!ok) return
     try {
       await api.remove(collection, entry.id)
@@ -178,23 +185,27 @@ export function EntryEditor({
       ))}
 
       <footer className="editor-footer">
-        <button type="submit" disabled={!dirty || status.kind === 'saving' || anyUploading}>
-          {anyUploading
-            ? 'Waiting for photos…'
-            : status.kind === 'saving'
-              ? 'Saving…'
-              : creating
-                ? `Create ${singular(collection)}`
-                : 'Save'}
-        </button>
-        {!creating && dirty && status.kind === 'idle' && <span className="muted">Unsaved changes</span>}
-        {status.kind === 'saved' && <span className="ok">Saved</span>}
-        {status.kind === 'error' && <span className="err">{status.message}</span>}
         {!creating && !fixed && (
           <button type="button" className="danger" onClick={remove}>
             Delete
           </button>
         )}
+        {/* Save and its status stay together in the lower right. */}
+        <div className="save-group">
+          {!creating && dirty && status.kind === 'idle' && <span className="muted">Unsaved changes</span>}
+          {status.kind === 'error' && <span className="err">{status.message}</span>}
+          <button type="submit" disabled={!dirty || status.kind === 'saving' || anyUploading}>
+            {anyUploading
+              ? 'Waiting for photos…'
+              : status.kind === 'saving'
+                ? 'Saving…'
+                : status.kind === 'saved'
+                  ? 'Saved'
+                  : creating
+                    ? `Create ${singular(collection)}`
+                    : 'Save'}
+          </button>
+        </div>
       </footer>
     </form>
   )
@@ -240,14 +251,16 @@ function FieldInput({
 
   if (field.kind === 'boolean') {
     return (
-      <div className="field field-checkbox">
+      <div className="field field-switch">
         <label htmlFor={id}>
           <input
             id={id}
             type="checkbox"
+            role="switch"
             checked={value === true}
             onChange={(e) => onChange(e.target.checked)}
           />
+          <span className="switch-track" aria-hidden="true" />
           {field.label}
         </label>
         {error && <p className="err">{error}</p>}

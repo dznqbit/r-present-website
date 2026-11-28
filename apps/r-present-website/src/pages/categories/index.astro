@@ -1,9 +1,9 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ProductCard from "../../components/ProductCard.astro";
-import { getCollection } from "astro:content";
+import { getPublishedProducts } from "../../lib/products";
 
-const products = await getCollection("products");
+const products = await getPublishedProducts();
 const sortedProducts = products.sort(
   (a, b) => b.data.createdAt.getTime() - a.data.createdAt.getTime(),
 );

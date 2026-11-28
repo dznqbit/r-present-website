@@ -274,15 +274,59 @@ button {
   border-color: var(--err);
 }
 
-.field-checkbox label {
-  display: flex;
+/* On/off fields: a real checkbox (keyboard + screen readers) drawn as a switch. */
+.field-switch label {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  margin: 0;
+  cursor: pointer;
 }
 
-.field-checkbox input {
+.field-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 44px;
+  height: 24px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.switch-track {
+  position: relative;
+  flex: none;
+  width: 44px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background-color 0.15s;
+}
+
+.switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
   width: 18px;
   height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  transition: transform 0.15s;
+}
+
+.field-switch input:checked + .switch-track {
+  background: var(--accent);
+}
+
+.field-switch input:checked + .switch-track::after {
+  transform: translateX(20px);
+}
+
+.field-switch input:focus-visible + .switch-track {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .hint,
@@ -524,8 +568,17 @@ button {
   outline-offset: 2px;
 }
 
-.editor-footer .danger {
+.editor-footer .save-group {
+  /* Save and its status sit in the lower right, Delete (when shown) on the left. */
   margin-left: auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.editor-footer .danger {
   background: none;
   color: var(--err);
   border: 1px solid currentColor;
@@ -709,7 +762,8 @@ button {
 
 .tile-img {
   position: relative;
-  aspect-ratio: 1;
+  /* Set on .gallery for collections with a fixed photo shape. */
+  aspect-ratio: var(--tile-aspect, 1);
   border-radius: 6px;
   overflow: hidden;
   background: var(--code-bg);
@@ -793,7 +847,7 @@ button {
 }
 
 .tile-add {
-  aspect-ratio: 1;
+  aspect-ratio: var(--tile-aspect, 1);
   align-items: center;
   justify-content: center;
   gap: 4px;
@@ -812,6 +866,166 @@ button {
 .tile-add-plus {
   font-size: 2rem;
   line-height: 1;
+}
+
+.gallery-hint {
+  margin: 0 0 6px;
+}
+
+.tile-crop {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.92);
+  color: #1d1a20;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.tile-crop:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.tile-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgb(255 255 255 / 0.75);
+  color: #1d1a20;
+}
+
+/* Crop tool */
+
+.crop-dialog {
+  width: min(560px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  overflow: auto;
+}
+
+.crop-dialog::backdrop {
+  background: rgb(0 0 0 / 0.6);
+}
+
+.crop-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+.crop-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.crop-help {
+  margin: 4px 0 10px;
+}
+
+/* Rotate on the left, zoom on the right, above the photo. */
+
+.crop-area {
+  position: relative;
+  height: min(60dvh, 480px);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #111;
+}
+
+.crop-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+/* .crop-dialog prefix: the dialog renders inside a .field, whose
+   `.field label` rule would otherwise make this a block with a margin. */
+.crop-dialog .crop-zoom {
+  margin: 0 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.crop-rotate {
+  display: flex;
+  gap: 6px;
+}
+
+.crop-rotate button {
+  width: 40px;
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.crop-rotate button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.crop-dialog .crop-zoom input {
+  width: min(200px, 40vw);
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.crop-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.crop-actions .secondary {
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 20px;
+  font-weight: 600;
+}
+
+.crop-actions .secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.crop-actions .primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-weight: 600;
+}
+
+.crop-actions .primary:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* Quiet on purpose: Publish is the main action, Discard the escape hatch. */

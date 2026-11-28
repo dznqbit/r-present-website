@@ -1,10 +1,10 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import ProductCard from "../../components/ProductCard.astro";
-import { getCollection } from "astro:content";
+import { getPublishedProducts } from "../../lib/products";
 
 export async function getStaticPaths() {
-  const products = await getCollection("products");
+  const products = await getPublishedProducts();
   const categories = [...new Set(products.map((p) => p.data.category))];
 
   return categories.map((category) => ({

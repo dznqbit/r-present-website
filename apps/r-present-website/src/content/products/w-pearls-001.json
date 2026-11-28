@@ -5,10 +5,7 @@
   "category": "Necklace",
   "description": "Stainless Steel cable chain, 17 \" + 1\"  extender + with freshwater pearls.",
   "available": true,
-  "images": [
-    "https://images.r-present.com/products/8edb1d624ea49a963673.jpg",
-    "https://images.r-present.com/products/573bb6f53ec5f91b1fa6.jpg",
-    "https://images.r-present.com/products/7d4099c5244599c066cf.jpg"
-  ],
-  "price": 60
+  "images": [],
+  "price": 60,
+  "published": true
 }

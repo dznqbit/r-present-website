@@ -9,6 +9,9 @@ const products = defineCollection({
     category: z.string(),
     description: z.string(),
     available: z.boolean(),
+    // Off hides the product from the shop and category pages (its own page
+    // still exists). Products saved before this field existed count as on.
+    published: z.boolean().default(true),
     images: z.array(z.string().url()),
     price: z.number().positive().optional(),
     buyLinkUrl: z.string().optional(),

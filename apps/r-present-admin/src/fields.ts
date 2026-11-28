@@ -30,6 +30,8 @@ export type Field = {
   kind: FieldKind
   required: boolean
   hint?: string
+  /** Switch position when an entry has no value yet (the schema's default). */
+  defaultOn?: boolean
 }
 
 export type DraftValue = string | boolean
@@ -106,6 +108,7 @@ export function fieldsFor(schema: JsonSchema, data: EntryData): Field[] {
       kind,
       required: required.has(name),
       ...(hint ? { hint } : {}),
+      ...(kind === 'boolean' && prop.default === true ? { defaultOn: true } : {}),
     }
   })
 }
@@ -116,7 +119,9 @@ export function toDraft(fields: Field[], data: EntryData): Draft {
     const v = data[f.name]
     switch (f.kind) {
       case 'boolean':
-        draft[f.name] = v === true
+        // Entries saved before a field existed get the schema's default, so
+        // e.g. old products stay published instead of switching off on save.
+        draft[f.name] = v === undefined ? f.defaultOn === true : v === true
         break
       case 'lines':
         draft[f.name] = Array.isArray(v) ? v.join('\n') : ''

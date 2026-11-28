@@ -79,9 +79,12 @@ const {
   const impactImage = impact?.querySelector("img");
   let impactTimeoutId: ReturnType<typeof setTimeout> | undefined;
 
-  const isCoarsePointer = window.matchMedia("(pointer: coarse)").matches;
+  // Only mice get the hammer; touch devices keep native behavior.
+  const hasFinePointer = window.matchMedia(
+    "(hover: hover) and (pointer: fine)",
+  ).matches;
 
-  if (cursor && cursorImage) {
+  if (hasFinePointer && cursor && cursorImage) {
     document.addEventListener("mousemove", (event) => {
       cursor.style.left = `${event.clientX}px`;
       cursor.style.top = `${event.clientY}px`;
@@ -109,10 +112,6 @@ const {
 
     document.addEventListener("mouseup", () => {
       cursorImage.src = DEFAULT_CURSOR_SRC;
-
-      if (isCoarsePointer) {
-        cursor.classList.remove("is-visible");
-      }
     });
   }
 </script>
@@ -127,10 +126,19 @@ const {
 </style>
 
 <style>
-  body,
-  a,
-  button {
-    cursor: none;
+  @media (hover: hover) and (pointer: fine) {
+    body,
+    a,
+    button {
+      cursor: none;
+    }
+  }
+
+  @media not ((hover: hover) and (pointer: fine)) {
+    #hammer-cursor,
+    #hammer-impact {
+      display: none;
+    }
   }
 
   #hammer-cursor {

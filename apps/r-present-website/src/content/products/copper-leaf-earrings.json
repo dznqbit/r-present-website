@@ -5,6 +5,7 @@
   "category": "earrings",
   "description": "Handcrafted copper earrings shaped like delicate leaves. Lightweight and comfortable for all-day wear. Each leaf is hand-formed and has unique texture.",
   "available": false,
-  "images": [],
-  "price": 45
+  "images": ["https://images.r-present.com/products/fixWCqQC/KEuIC7.jpg"],
+  "price": 45,
+  "published": true
 }

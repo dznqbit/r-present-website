@@ -5,6 +5,7 @@
   "category": "rings",
   "description": "Set of three handcrafted 14k gold-filled stacking rings. Each ring features different textures - hammered, smooth, and twisted. Can be worn together or separately.",
   "available": false,
-  "images": [],
-  "price": 120
+  "images": ["https://images.r-present.com/products/J4lZTgc0/ixnZyH.jpg"],
+  "price": 120,
+  "published": true
 }

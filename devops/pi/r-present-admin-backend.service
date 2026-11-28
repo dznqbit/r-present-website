@@ -10,6 +10,8 @@ WorkingDirectory=/srv/r-present/repo/apps/r-present-admin-backend
 Environment=NODE_ENV=production
 Environment=PORT=8787
 Environment=SITE_DIR=/srv/r-present/repo/apps/r-present-website
+# The admin's "View preview" link (see r-present-admin.nginx.conf).
+Environment=PREVIEW_URL=https://preview.r-present.com
 # Who Publish commits as. Pushes go to origin/main via the deploy key.
 Environment="PUBLISH_AUTHOR_NAME=R. Present Admin"
 Environment=PUBLISH_AUTHOR_EMAIL=admin@r-present.com

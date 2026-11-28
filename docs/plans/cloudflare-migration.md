@@ -28,7 +28,7 @@ and downloads are always free.
 | 3 | ~~Check the site~~ ✅ (GitHub Pages settings still to eyeball) | Q + Claude | 2 |
 | 4 | ~~Create the R2 bucket and connect `images.r-present.com`~~ ✅ | Q | 2 |
 | 5 | ~~Create R2 tokens; put the Pi's on the Pi~~ ✅ | Q | 4 |
-| 6 | Test uploads (~~laptop~~ ✅, then Pi, then iPhone) | Claude + Q | 5 |
+| 6 | Test uploads (~~laptop~~ ✅, ~~Pi~~ ✅, then iPhone) | Claude + Q | 5 |
 | 7 | Tear down the AWS pieces | Q + Claude | 6 |
 
 Steps 1–3 are the only risky part, because the site depends on DNS. Everything after that is additive.
@@ -126,7 +126,7 @@ secret. The endpoint is `https://<account-id>.r2.cloudflarestorage.com`.
 each value, and the secret isn't echoed:
 
 ```sh
-ssh -t 192.168.0.16 '
+ssh -t pi-hole '
   read -rp "R2 account ID: " acct
   read -rp "Access key ID: " id
   read -rsp "Secret access key: " secret; echo

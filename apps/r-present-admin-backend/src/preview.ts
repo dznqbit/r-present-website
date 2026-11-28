@@ -17,6 +17,7 @@ export type PreviewStatus = {
   stale: boolean
   /** Port nginx serves the preview on; the client builds the URL from its own hostname. */
   port: number
+  url: string | null
   /** Tail of the build output, only on failure. */
   log: string[] | null
 }
@@ -75,6 +76,7 @@ export async function getPreviewStatus(): Promise<PreviewStatus> {
     finishedAt: finishedAt?.toISOString() ?? null,
     stale,
     port: config.previewPort,
+    url: config.previewUrl,
     log: state === 'failed' ? failureLog : null,
   }
 }

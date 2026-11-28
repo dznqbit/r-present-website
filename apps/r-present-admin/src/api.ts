@@ -25,6 +25,8 @@ export type PreviewStatus = {
   finishedAt: string | null
   stale: boolean
   port: number
+  /** Full preview address when the server has one configured. */
+  url: string | null
   log: string[] | null
 }
 

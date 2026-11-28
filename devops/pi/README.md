@@ -68,6 +68,16 @@ ssh pi-hole 'systemctl is-active r-present-admin-backend && curl -s localhost:80
    symlink it into `sites-enabled`, then run `nginx -t && systemctl reload nginx`.
 5. Run `deploy.sh`.
 
+## Shared nginx
+
+nginx on this Pi isn't only ours: it also serves Pi-hole's web admin and the
+Yesler dashboard, which come from another repo. **`/etc/nginx/README.md` on the
+Pi** maps every site, port, hostname, cert and renewal hook, plus the rules for
+changing them. Read it before touching nginx. **Whenever you change
+`r-present-admin.nginx.conf`'s ports, hostnames or certs, or add anything
+nginx-related, update that README in the same session** (`sudo nano
+/etc/nginx/README.md`), including its "Last updated" line.
+
 ## HTTPS names (already done)
 
 `admin.r-present.com` and `preview.r-present.com` are **DNS-only** A records in

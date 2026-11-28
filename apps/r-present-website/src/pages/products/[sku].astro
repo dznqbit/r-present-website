@@ -15,13 +15,7 @@ export async function getStaticPaths() {
 }
 
 const { product } = Astro.props;
-const {
-  name,
-  description,
-  available,
-  images,
-  buyLinkUrl,
-} = product.data;
+const { name, description, available, images, buyLinkUrl } = product.data;
 
 // Where to find a piece that's for sale in person. "Upcoming" means as of
 // the last site build.

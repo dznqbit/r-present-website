@@ -38,7 +38,6 @@ const {
           >
         </div>
         <ul>
-          <li><a href="/">Home</a></li>
           <li><a href="/projects">Projects</a></li>
           <li><a href="/categories">Shop</a></li>
           <li><a href="/about">About</a></li>
@@ -117,6 +116,15 @@ const {
     });
   }
 </script>
+
+<style is:global>
+  /* Links are black, visited or not, unless a component colors them.
+     :where() keeps this at zero specificity so any component rule wins, and
+     any author rule beats the browser's blue/purple. */
+  :where(a) {
+    color: #1a1a1a;
+  }
+</style>
 
 <style>
   body,
@@ -214,7 +222,9 @@ const {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    gap: 0.5rem 80px;
+    /* Space between links shrinks with the screen (80px max on desktop), so
+       all three fit on one row on phones. */
+    gap: 0.5rem clamp(1.5rem, 10vw, 80px);
     width: 100%;
     max-width: 800px;
     margin: 0 auto;
@@ -269,6 +279,21 @@ const {
   @media (max-width: 768px) {
     main {
       background-size: 20em;
+    }
+
+    .site-title {
+      text-align: left;
+    }
+
+    /* Links run edge to edge, so "Projects" lines up under the logo's "R". */
+    nav ul {
+      justify-content: space-between;
+    }
+
+    /* 30% smaller than the 72px desktop logo. */
+    .site-title img {
+      height: 50px;
+      width: auto;
     }
   }
 </style>

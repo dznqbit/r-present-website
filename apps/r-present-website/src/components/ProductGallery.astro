@@ -1,0 +1,358 @@
+---
+import "photoswipe/style.css";
+import { responsiveImage } from "../lib/images";
+
+interface Props {
+  /** Photo URLs, first one shown first. */
+  images: string[];
+  /** Product name, for alt text. */
+  name: string;
+  /** CSS `sizes` for how wide the gallery shows. */
+  sizes: string;
+}
+
+const { images, name, sizes } = Astro.props;
+const many = images.length > 1;
+
+// Each arrow is a see-through disc with the chevron cut out of it (an SVG
+// mask), so the photo shows through the arrow's shape. Drawn in a 48-unit box
+// around the 24-unit chevron, so the chevron is half the disc's width.
+const ARROWS = [
+  { side: "prev", label: "Previous photo", path: "M15 5l-7 7 7 7" },
+  { side: "next", label: "Next photo", path: "M9 5l7 7-7 7" },
+] as const;
+// Mask ids must be unique on the page, even with several galleries.
+const uid = Math.random().toString(36).slice(2, 8);
+---
+
+<!--
+  Swipeable photos: a horizontal scroller that snaps one photo at a time
+  (native swiping on touch screens and trackpads), with dots below that show
+  which photo is in view and jump to one when clicked. Round see-through
+  arrows over the edges step back and forth, shown only when there's a
+  photo that way.
+-->
+<div class="gallery">
+  <div class="gallery-frame">
+    <div
+      class="gallery-track"
+      tabindex={many ? 0 : undefined}
+      role={many ? "region" : undefined}
+      aria-roledescription={many ? "carousel" : undefined}
+      aria-label={many ? `Photos of ${name}` : undefined}
+    >
+      {
+        images.length === 0 ? (
+          // No photo yet: an empty grey box instead of a broken image.
+          <div class="slide" />
+        ) : (
+          images.map((image, i) => (
+            <div class="slide">
+              {/* Tapping opens the full photo in the zoomable lightbox (or,
+                  without JavaScript, on its own). Product photos are 3:4 at
+                  up to 1500x2000; the script corrects the size if not. */}
+              <a
+                class="slide-link"
+                href={image}
+                data-pswp-width="1500"
+                data-pswp-height="2000"
+              >
+                <img
+                  {...responsiveImage(image, sizes)}
+                  alt={
+                    many ? `${name}, photo ${i + 1} of ${images.length}` : name
+                  }
+                  loading={i === 0 ? "eager" : "lazy"}
+                  fetchpriority={i === 0 ? "high" : undefined}
+                  decoding="async"
+                />
+              </a>
+            </div>
+          ))
+        )
+      }
+    </div>
+
+    {
+      many && (
+        <>
+          {ARROWS.map(({ side, label, path }) => (
+            <button
+              type="button"
+              class={`gallery-arrow gallery-${side}`}
+              aria-label={label}
+              hidden={side === "prev"}
+            >
+              <svg viewBox="-12 -12 48 48" aria-hidden="true">
+                <mask id={`gallery-cut-${side}-${uid}`}>
+                  <rect x="-12" y="-12" width="48" height="48" fill="white" />
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke="black"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </mask>
+                <circle
+                  class="gallery-arrow-disc"
+                  cx="12"
+                  cy="12"
+                  r="24"
+                  mask={`url(#gallery-cut-${side}-${uid})`}
+                />
+              </svg>
+            </button>
+          ))}
+        </>
+      )
+    }
+  </div>
+
+  {
+    many && (
+      <div class="gallery-dots">
+        {images.map((_, i) => (
+          <button
+            type="button"
+            aria-label={`Show photo ${i + 1}`}
+            aria-current={i === 0 ? "true" : undefined}
+            data-index={i}
+          />
+        ))}
+      </div>
+    )
+  }
+</div>
+
+<script>
+  import PhotoSwipeLightbox from "photoswipe/lightbox";
+
+  // Long edge the uploader gives display photos.
+  const FULL_EDGE = 2000;
+
+  document.querySelectorAll<HTMLElement>(".gallery").forEach((gallery) => {
+    const track = gallery.querySelector<HTMLElement>(".gallery-track");
+    if (!track) return;
+    const dots = [
+      ...gallery.querySelectorAll<HTMLButtonElement>(".gallery-dots button"),
+    ];
+    const prev = gallery.querySelector<HTMLButtonElement>(".gallery-prev");
+    const next = gallery.querySelector<HTMLButtonElement>(".gallery-next");
+
+    const current = () => Math.round(track.scrollLeft / track.clientWidth);
+    const show = (i: number, behavior: ScrollBehavior = "smooth") =>
+      track.scrollTo({ left: i * track.clientWidth, behavior });
+
+    // Full-screen lightbox with pinch / double-tap / wheel zoom, pan, and
+    // swipe between photos. The bulk of PhotoSwipe loads on the first tap.
+    const lightbox = new PhotoSwipeLightbox({
+      gallery: track,
+      children: "a.slide-link",
+      pswpModule: () => import("photoswipe"),
+      bgOpacity: 1,
+      wheelToZoom: true,
+      // Room to inspect: up to 2x the photo's real pixels.
+      maxZoomLevel: 2,
+    });
+    // The links carry a nominal 3:4 size. Once a slide's photo has loaded,
+    // use its real shape, in case an older photo isn't 3:4.
+    lightbox.addFilter("itemData", (itemData) => {
+      const img = itemData.element?.querySelector("img");
+      if (img?.naturalWidth && img.naturalHeight) {
+        const ratio = img.naturalWidth / img.naturalHeight;
+        itemData.width = ratio >= 1 ? FULL_EDGE : Math.round(FULL_EDGE * ratio);
+        itemData.height =
+          ratio >= 1 ? Math.round(FULL_EDGE / ratio) : FULL_EDGE;
+      }
+      return itemData;
+    });
+    // Keep the carousel on the photo shown in the lightbox, so closing it
+    // zooms back into the right slide.
+    lightbox.on("change", () => {
+      const index = lightbox.pswp?.currIndex;
+      if (index !== undefined) show(index, "instant");
+    });
+    lightbox.init();
+
+    if (dots.length === 0) return;
+
+    const step = (by: number) =>
+      show(Math.min(dots.length - 1, Math.max(0, current() + by)));
+
+    // Light up the dot for whichever photo is in view, and only offer the
+    // arrows that lead somewhere.
+    const update = () => {
+      const index = current();
+      dots.forEach((dot, i) => {
+        if (i === index) dot.setAttribute("aria-current", "true");
+        else dot.removeAttribute("aria-current");
+      });
+      if (prev) prev.hidden = index <= 0;
+      if (next) next.hidden = index >= dots.length - 1;
+    };
+    let frame = 0;
+    track.addEventListener(
+      "scroll",
+      () => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(update);
+      },
+      { passive: true },
+    );
+
+    dots.forEach((dot, i) => dot.addEventListener("click", () => show(i)));
+    prev?.addEventListener("click", () => step(-1));
+    next?.addEventListener("click", () => step(1));
+
+    // Arrow keys step through the photos when the gallery has focus.
+    track.addEventListener("keydown", (event) => {
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault();
+      step(event.key === "ArrowRight" ? 1 : -1);
+    });
+  });
+</script>
+
+<style>
+  .gallery-frame {
+    position: relative;
+  }
+
+  .gallery-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .gallery-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .gallery-track:focus-visible {
+    outline: 1px solid #1a1a1a;
+    outline-offset: 2px;
+  }
+
+  /* Product photos are cropped to 3:4 on upload (see PHOTO_ASPECT in the
+     admin backend), so they fill each slide exactly. */
+  .slide {
+    flex: 0 0 100%;
+    aspect-ratio: 3 / 4;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    background: #f5f5f5;
+  }
+
+  .slide-link {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .slide img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    /* Only shapes the focus outline; the disc itself is the SVG. */
+    border-radius: 50%;
+    background: none;
+  }
+
+  .gallery-arrow[hidden] {
+    display: none;
+  }
+
+  /* With a mouse, the arrows stay out of the way until the pointer is over
+     the photo (or a keyboard user tabs in). Touch screens can't hover, so
+     they always show the arrows. */
+  @media (hover: hover) and (pointer: fine) {
+    .gallery-arrow {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .gallery-frame:hover .gallery-arrow,
+    .gallery-frame:focus-within .gallery-arrow {
+      opacity: 1;
+    }
+  }
+
+  .gallery-arrow-disc {
+    fill: rgb(255 255 255 / 0.6);
+    transition: fill 0.15s;
+  }
+
+  .gallery-arrow:hover .gallery-arrow-disc,
+  .gallery-arrow:focus-visible .gallery-arrow-disc {
+    fill: rgb(255 255 255 / 0.9);
+  }
+
+  .gallery-arrow:focus-visible {
+    outline: 1px solid #1a1a1a;
+  }
+
+  .gallery-prev {
+    left: 0.75rem;
+  }
+
+  .gallery-next {
+    right: 0.75rem;
+  }
+
+  .gallery-arrow svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .gallery-dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+    padding-top: 0.75rem;
+  }
+
+  /* A roomy tap target around a small dot. */
+  .gallery-dots button {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: none;
+    display: grid;
+    place-items: center;
+  }
+
+  .gallery-dots button::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid #1a1a1a;
+    background: transparent;
+    transition: background-color 0.15s;
+  }
+
+  .gallery-dots button[aria-current="true"]::before {
+    background: #1a1a1a;
+  }
+
+  .gallery-dots button:focus-visible {
+    outline: 1px solid #1a1a1a;
+  }
+</style>

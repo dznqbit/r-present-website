@@ -1,34 +1,38 @@
 ---
 import { responsiveImage } from "../lib/images";
-import { markdownToText } from "../lib/markdown";
+import type { Product } from "../lib/products";
+
 interface Props {
-  sku: string;
-  name: string;
-  category: string;
-  description: string;
-  available: boolean;
-  images: string[];
-  price?: number;
+  product: Product;
 }
 
-const { sku, name, description, available, images, price } = Astro.props;
+const { product } = Astro.props;
+const { name, available, images, price } = product.data;
 // No photo yet: the image box stays empty (grey) instead of a broken image.
 const thumbnail = images[0];
+// Shown in place of the first photo while the mouse is over the card.
+const hoverPhoto = images[1];
+const SIZES = "(max-width: 480px) 100vw, (max-width: 768px) 50vw, 400px";
 ---
 
-<article class="product-card">
-  <div class="card-header">
-    <div class="card-name">
-      <a href={`/products/${sku}`}>{name}</a>
-    </div>
-  </div>
-
+<a class="product-card" href={`/products/${product.id}`}>
   <div class="card-image">
     {
       thumbnail && (
         <img
-          {...responsiveImage(thumbnail, "(max-width: 640px) 100vw, 400px")}
+          {...responsiveImage(thumbnail, SIZES)}
           alt={name}
+          loading="lazy"
+          decoding="async"
+        />
+      )
+    }
+    {
+      hoverPhoto && (
+        <img
+          class="hover-photo"
+          {...responsiveImage(hoverPhoto, SIZES)}
+          alt=""
           loading="lazy"
           decoding="async"
         />
@@ -36,64 +40,29 @@ const thumbnail = images[0];
     }
   </div>
 
-  <div class="card-footer">
-    <p class="card-description">{markdownToText(description)}</p>
-    <div class="card-price">
-      <span class:list={{ "is-sold": !available }}>
-        {price ? `$${price}` : "—"}
-      </span>
-      {!available && <span class="sold-badge">Sold</span>}
-    </div>
+  <div class="card-info">
+    <span class="card-name">{name}</span>
+    {
+      (price || !available) && (
+        <span class="card-price">
+          {price && (
+            <span class:list={{ "is-sold": !available }}>${price}</span>
+          )}
+          {!available && <span class="sold-out">Sold out</span>}
+        </span>
+      )
+    }
   </div>
-</article>
+</a>
 
 <style>
   .product-card {
     display: flex;
     flex-direction: column;
-
-    border: 3px solid #1a1a1a;
-    border-radius: 24px;
-    overflow: hidden;
-    background: #fff;
-    transition:
-      transform 0.2s,
-      box-shadow 0.2s;
-  }
-
-  .product-card:hover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  }
-
-  .product-card a {
-    cursor: none;
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
     height: 100%;
-  }
-
-  .card-header {
-    background-image: radial-gradient(circle, #3b6d92 1.3px, transparent 1.3px);
-    background-size: 9px 9px;
-    border-bottom: 3px solid #1a1a1a;
-  }
-
-  .card-name {
-    display: flex;
-    align-items: left;
-    font-family: "Amatic SC", system-ui, sans-serif;
-    font-size: 1.75rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-  }
-
-  .card-name a {
-    flex-basis: 80%;
-    background: white;
-    padding: 0.5em;
-    border-right: 3px solid #1a1a1a;
+    color: inherit;
+    text-decoration: none;
+    background: #fff;
   }
 
   /* Product photos are cropped to 3:4 on upload (see PHOTO_ASPECT in the
@@ -101,7 +70,8 @@ const thumbnail = images[0];
   .card-image {
     position: relative;
     aspect-ratio: 3 / 4;
-    background: #fff;
+    background: #f5f5f5;
+    overflow: hidden;
   }
 
   .card-image img {
@@ -111,56 +81,66 @@ const thumbnail = images[0];
     object-fit: cover;
   }
 
-  .card-footer {
-    margin-top: auto;
-    margin-bottom: 0;
-    display: flex;
-    border-top: 3px solid #1a1a1a;
+  /* The second photo sits on top of the first, hidden, and fades in while
+     the mouse is over the card. Touch screens never show it: a tap goes
+     straight to the product. */
+  .card-image .hover-photo {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.25s;
   }
 
-  .card-description {
-    flex: 1.4;
-    margin: 0;
-    padding: 0.75rem 1rem;
-    border-right: 3px solid #1a1a1a;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    align-self: center;
-    text-align: center;
-    font-family: "Averia Libre", system-ui, sans-serif;
-    font-size: 0.8rem;
-    line-height: 1.4;
-    color: #333;
+  @media (hover: hover) and (pointer: fine) {
+    .product-card:hover .hover-photo,
+    .product-card:focus-visible .hover-photo {
+      opacity: 1;
+    }
+  }
+
+  .card-info {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 1rem 1.25rem 1.25rem;
+  }
+
+  .card-name {
+    font-family: "Amatic SC", system-ui, sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .product-card:hover .card-name,
+  .product-card:focus-visible .card-name {
+    text-decoration: underline;
   }
 
   .card-price {
-    flex: 1;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    font-family: "Amatic SC", system-ui, sans-serif;
-    font-weight: 700;
-    font-size: 2.25rem;
+    gap: 0.6rem;
+    font-family: "Averia Libre", system-ui, sans-serif;
+    font-size: 0.95rem;
   }
 
-  .card-price .is-sold {
+  .is-sold {
     text-decoration: line-through;
     color: #888;
   }
 
-  .sold-badge {
-    background: #c0392b;
+  .sold-out {
+    padding: 0.2rem 0.5rem;
+    background: #1a1a1a;
     color: #fff;
-    padding: 0.15rem 0.6rem;
-    border-radius: 4px;
-    font-family: "Averia Libre", system-ui, sans-serif;
-    font-size: 0.7rem;
-    font-weight: bold;
-    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    line-height: 1.2;
     text-transform: uppercase;
   }
 </style>

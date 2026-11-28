@@ -1,0 +1,56 @@
+---
+import ProductCard from "./ProductCard.astro";
+import type { Product } from "../lib/products";
+
+interface Props {
+  products: Product[];
+}
+
+const { products } = Astro.props;
+---
+
+{
+  products.length > 0 && (
+    <ul class="product-grid">
+      {products.map((product) => (
+        <li>
+          <ProductCard product={product} />
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+<style>
+  /* Cards sit edge to edge, separated by single 1px lines: the grid draws the
+     top and left edges, each card its own right and bottom edge, so no line
+     is ever doubled. */
+  .product-grid {
+    --line: 1px solid #1a1a1a;
+
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    border-top: var(--line);
+    border-left: var(--line);
+  }
+
+  .product-grid > li {
+    border-right: var(--line);
+    border-bottom: var(--line);
+  }
+
+  @media (max-width: 768px) {
+    .product-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 480px) {
+    .product-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

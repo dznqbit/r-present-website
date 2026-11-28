@@ -118,6 +118,15 @@ const {
   }
 </script>
 
+<style is:global>
+  /* Links are black, visited or not, unless a component colors them.
+     :where() keeps this at zero specificity so any component rule wins, and
+     any author rule beats the browser's blue/purple. */
+  :where(a) {
+    color: #1a1a1a;
+  }
+</style>
+
 <style>
   body,
   a,

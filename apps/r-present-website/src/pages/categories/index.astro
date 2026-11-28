@@ -1,6 +1,6 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import ProductCard from "../../components/ProductCard.astro";
+import ProductGrid from "../../components/ProductGrid.astro";
 import { getPublishedProducts } from "../../lib/products";
 
 const products = await getPublishedProducts();
@@ -10,21 +10,7 @@ const sortedProducts = products.sort(
 ---
 
 <BaseLayout title="Shop - R. Present">
-  <div class="products-grid">
-    {
-      sortedProducts.map((product) => (
-        <ProductCard
-          sku={product.id}
-          name={product.data.name}
-          category={product.data.category}
-          description={product.data.description}
-          available={product.data.available}
-          images={product.data.images}
-          price={product.data.price}
-        />
-      ))
-    }
-  </div>
+  <ProductGrid products={sortedProducts} />
 
   {
     sortedProducts.length === 0 && (
@@ -39,12 +25,6 @@ const sortedProducts = products.sort(
     margin: 0 0 2rem 0;
   }
 
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
-  }
-
   .no-products {
     text-align: center;
     padding: 3rem;
@@ -55,10 +35,6 @@ const sortedProducts = products.sort(
   @media (max-width: 768px) {
     h1 {
       font-size: 2rem;
-    }
-
-    .products-grid {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     }
   }
 </style>

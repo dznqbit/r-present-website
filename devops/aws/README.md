@@ -1,5 +1,9 @@
 # AWS: photo hosting
 
+> **Being retired (2026-11-27).** Photos are moving to Cloudflare R2; see
+> [docs/plans/cloudflare-migration.md](../../docs/plans/cloudflare-migration.md).
+> Step 7 there tears this down.
+
 Photos the admin uploads live in an existing S3 bucket and are served from
 **https://images.r-present.com** through CloudFront. This Terraform sets up:
 

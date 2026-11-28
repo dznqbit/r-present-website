@@ -43,9 +43,22 @@ const SAFE_SEGMENT = /^[a-z0-9-]+$/
 let s3: S3Client | null = null
 
 async function store(key: string, body: Buffer): Promise<string> {
-  const { bucket, region, publicBaseUrl, localDir, localBaseUrl } = config.uploads
+  const { bucket, region, endpoint, publicBaseUrl, localDir, localBaseUrl } = config.uploads
   if (bucket) {
-    s3 ??= new S3Client({ region })
+    s3 ??= new S3Client(
+      endpoint
+        ? {
+            region,
+            endpoint,
+            // R2 and friends want the bucket in the path, not the hostname.
+            forcePathStyle: true,
+            // Newer SDKs add checksum headers by default; S3-compatible
+            // services don't all accept them. Only send them when required.
+            requestChecksumCalculation: 'WHEN_REQUIRED',
+            responseChecksumValidation: 'WHEN_REQUIRED',
+          }
+        : { region },
+    )
     await s3.send(
       new PutObjectCommand({
         Bucket: bucket,

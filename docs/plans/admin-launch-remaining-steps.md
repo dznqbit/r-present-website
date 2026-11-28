@@ -2,6 +2,12 @@
 
 _Last updated 2026-11-22._
 
+> **2026-11-27: steps 1–5 are replaced by
+> [cloudflare-migration.md](cloudflare-migration.md).** AWS never verified the
+> account for CloudFront, so photos move to Cloudflare R2 instead. Step 6 is
+> done. Step 7 (iPhone) moved into the new plan. The open questions about
+> `deploy.sh`, the publish author and unused photos still apply.
+
 The admin is live on the Pi at http://192.168.0.16:8080/. It's on `main` at
 `e94cb4d` (PR #7). Editing, Preview, Publish and Discard work.
 

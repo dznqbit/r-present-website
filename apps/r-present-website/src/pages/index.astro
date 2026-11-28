@@ -1,11 +1,11 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { getCollection } from "astro:content";
 import { formatShortMarketDate, getUpcomingMarkets } from "../lib/markets";
+import { getPublishedProducts } from "../lib/products";
 import { getProjectsByIndex } from "../lib/projects";
 
 // Get unique categories from products
-const products = await getCollection("products");
+const products = await getPublishedProducts();
 const categories = [...new Set(products.map((p) => p.data.category))].sort();
 
 const upcomingMarkets = await getUpcomingMarkets(3);

@@ -16,9 +16,9 @@ export async function getStaticPaths() {
 const { project } = Astro.props;
 const { name, date, description, images, location, products } = project.data;
 
-const relatedProducts = products
-  ? await Promise.all(products.map((ref) => getEntry(ref)))
-  : [];
+const relatedProducts = (
+  products ? await Promise.all(products.map((ref) => getEntry(ref))) : []
+).filter((product) => product.data.published);
 ---
 
 <BaseLayout title={`${name} - R. Present`} description={description}>

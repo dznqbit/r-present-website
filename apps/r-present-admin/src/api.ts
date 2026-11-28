@@ -5,6 +5,7 @@ export type JsonSchema = {
   items?: JsonSchema
   anyOf?: JsonSchema[]
   format?: string
+  default?: unknown
 }
 
 export type Collection = {

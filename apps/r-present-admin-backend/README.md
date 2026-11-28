@@ -20,6 +20,7 @@ For local dev, put these in `.env` in this folder (gitignored); `npm run dev` lo
 | `SITE_DIR` | `../r-present-website`      | Site app whose `src/content/` we edit  |
 | `PREVIEW_DIR` | `<repo>/.preview`        | Where preview builds land               |
 | `PREVIEW_PORT` | `8081`                  | Port the preview is served on (by nginx) |
+| `PREVIEW_URL` | (unset) | Where the admin links to the preview, e.g. `https://preview.r-present.com`. Unset means this host on `PREVIEW_PORT` |
 | `S3_BUCKET` | (unset) | Bucket for photos. Unset means photos are saved to `.uploads/` locally |
 | `S3_REGION` | `us-west-2` | Bucket region (`auto` for Cloudflare R2) |
 | `S3_ENDPOINT` | (unset) | S3-compatible endpoint instead of AWS, e.g. `https://<account-id>.r2.cloudflarestorage.com` for R2 |

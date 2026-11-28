@@ -1,15 +1,21 @@
 # Raspberry Pi deployment
 
-The admin runs on the Pi 3 at **192.168.0.16** (also running Pi-hole and nginx).
-Open it at **http://192.168.0.16:8080/**. Draft previews show up at **http://192.168.0.16:8081/**.
+The admin runs on the Pi 3 at **192.168.0.15**, wired Ethernet only (also running
+Pi-hole and nginx). On the home network, open it at **https://admin.r-present.com**.
+Draft previews show up at **https://preview.r-present.com**. The old addresses,
+http://192.168.0.15:8080/ and :8081/, still work as a fallback.
+
+The router reserves .15 for the Pi's Ethernet port. The Pi's Wi-Fi is off: with
+both on the same network, the two ports kept knocking each other's address off.
 
 | Piece      | Where                                                           |
 | ---------- | --------------------------------------------------------------- |
 | Node 24    | `/opt/node` (official tarball, not apt)                         |
 | Repo clone | `/srv/r-present/repo`, cloned via `git@github-r-present:…`      |
 | Backend    | systemd `r-present-admin-backend` on port `8787`                 |
-| Admin SPA  | nginx `:8080` serves `apps/r-present-admin/dist`, proxies `/api` |
-| Preview    | nginx `:8081` serves `/srv/r-present/repo/.preview` (built by the admin) |
+| Admin SPA  | nginx `admin.r-present.com` (`:443`) and `:8080` serve `apps/r-present-admin/dist`, proxy `/api` |
+| Preview    | nginx `preview.r-present.com` (`:443`) and `:8081` serve `/srv/r-present/repo/.preview` (built by the admin) |
+| HTTPS cert | `/etc/letsencrypt/live/admin.r-present.com/`, covers both names; renews itself |
 
 The `github-r-present` SSH host alias (in `~/.ssh/config` on the Pi) uses the
 deploy key `~/.ssh/r-present-deploy`. That key has write access to this repo only.
@@ -20,7 +26,7 @@ The Pi runs whatever is on GitHub's `main`, so merge your changes first. Then,
 from your laptop:
 
 ```sh
-ssh 192.168.0.16 /srv/r-present/repo/devops/pi/deploy.sh
+ssh pi-hole /srv/r-present/repo/devops/pi/deploy.sh
 ```
 
 `deploy.sh` pulls `main`, reinstalls packages, rebuilds the backend and the
@@ -36,12 +42,12 @@ If the deploy changed either of these files, install it by hand, because
 
 ```sh
 # systemd unit
-ssh 192.168.0.16 'cd /srv/r-present/repo &&
+ssh pi-hole 'cd /srv/r-present/repo &&
   sudo install -m 644 devops/pi/r-present-admin-backend.service /etc/systemd/system/ &&
   sudo systemctl daemon-reload && sudo systemctl restart r-present-admin-backend'
 
 # nginx config
-ssh 192.168.0.16 'cd /srv/r-present/repo &&
+ssh pi-hole 'cd /srv/r-present/repo &&
   sudo install -m 644 devops/pi/r-present-admin.nginx.conf /etc/nginx/sites-available/r-present-admin &&
   sudo nginx -t && sudo systemctl reload nginx'
 ```
@@ -49,7 +55,7 @@ ssh 192.168.0.16 'cd /srv/r-present/repo &&
 To check that it's up:
 
 ```sh
-ssh 192.168.0.16 'systemctl is-active r-present-admin-backend && curl -s localhost:8080/api/health'
+ssh pi-hole 'systemctl is-active r-present-admin-backend && curl -s localhost:8080/api/health'
 ```
 
 ## First-time setup (already done)
@@ -61,6 +67,28 @@ ssh 192.168.0.16 'systemctl is-active r-present-admin-backend && curl -s localho
 4. Copy `r-present-admin.nginx.conf` to `/etc/nginx/sites-available/r-present-admin`,
    symlink it into `sites-enabled`, then run `nginx -t && systemctl reload nginx`.
 5. Run `deploy.sh`.
+
+## HTTPS names (already done)
+
+`admin.r-present.com` and `preview.r-present.com` are **DNS-only** A records in
+Cloudflare pointing at `192.168.0.15`. They have to be DNS-only: Cloudflare's
+proxy can't reach a home address. Since they point at a home address, they only
+work on the home network.
+
+The certificate comes from Let's Encrypt using certbot's Cloudflare DNS plugin,
+so nothing has to be reachable from the internet. It uses the same Cloudflare
+token as the Yesler certs (`~/.secrets/cloudflare.ini`, DNS edit on both
+r-present.com and yesler.casa):
+
+```sh
+sudo certbot certonly --dns-cloudflare \
+  --dns-cloudflare-credentials /home/dznqbit/.secrets/cloudflare.ini \
+  --cert-name admin.r-present.com -d admin.r-present.com -d preview.r-present.com
+```
+
+certbot's timer renews it. The deploy hook in
+`/etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh` reloads nginx after
+any renewal.
 
 ## Logs
 

@@ -43,10 +43,10 @@ On the Pi, nginx plays the role of steps 2 and 3.
 
 ## Deploying the admin to the Pi
 
-The admin runs on the Raspberry Pi at http://192.168.0.16:8080/ and tracks `main`. Merge to `main`, then:
+The admin runs on the Raspberry Pi at https://admin.r-present.com (home network only) and tracks `main`. Merge to `main`, then:
 
 ```sh
-ssh 192.168.0.16 /srv/r-present/repo/devops/pi/deploy.sh
+ssh pi-hole /srv/r-present/repo/devops/pi/deploy.sh
 ```
 
 It refuses to run while the admin has unpublished changes (Publish or **Discard…** them first). Changes to the systemd unit or nginx config need one extra step. Details, logs and first-time setup are in [`devops/pi/README.md`](devops/pi/README.md).

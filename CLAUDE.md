@@ -24,7 +24,7 @@ This is a monorepo. Each app is independent (own `package.json` and lockfile, no
 - `apps/r-present-website` - Public Astro site, deployed to GitHub Pages. **Most of this file is about this app; the paths below are relative to it.**
 - `apps/r-present-admin` - Local admin SPA (Vite + React + TS) for editing site content.
 - `apps/r-present-admin-backend` - Node API (Hono) that edits the site's `src/content/`, builds previews, and publishes by committing and pushing to `main`.
-- `devops/` - Deployment config for the admin stack on the Raspberry Pi 3 at 192.168.0.16 (also runs Pi-hole + nginx; ~900MB RAM, so avoid long-running heavy processes).
+- `devops/` - Deployment config for the admin stack on the Raspberry Pi 3 at 192.168.0.15, reachable as `ssh pi-hole` and https://admin.r-present.com (also runs Pi-hole + nginx; ~900MB RAM, so avoid long-running heavy processes).
 
 ## Project Overview
 

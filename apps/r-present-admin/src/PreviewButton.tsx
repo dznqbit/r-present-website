@@ -80,8 +80,11 @@ export function PreviewButton({ contentVersion }: Props) {
   }
 
   if (status.state === 'ready') {
-    // The preview is served at the root of its own port on the same host.
-    const url = new URL(`${window.location.protocol}//${window.location.hostname}:${status.port}/`)
+    // Its own hostname when configured (https://preview.r-present.com on the
+    // Pi); otherwise the root of its own port on this host.
+    const url = new URL(
+      status.url ?? `${window.location.protocol}//${window.location.hostname}:${status.port}/`,
+    )
     // Bust any cached index.html from a previous build.
     if (status.finishedAt) url.searchParams.set('v', String(Date.parse(status.finishedAt)))
     return (

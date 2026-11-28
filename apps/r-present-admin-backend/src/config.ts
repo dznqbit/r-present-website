@@ -17,6 +17,9 @@ export const config = {
   // site uses root-relative URLs (/images/…) and can't live under a subpath.
   previewDir: path.resolve(process.env.PREVIEW_DIR ?? path.join(siteDir, '..', '..', '.preview')),
   previewPort: Number(process.env.PREVIEW_PORT ?? 8081),
+  // Where people open the preview, e.g. https://preview.r-present.com. Unset
+  // means "this host, on previewPort".
+  previewUrl: process.env.PREVIEW_URL || null,
   uploads: {
     // When S3_BUCKET is set, photos go to that bucket and are served via
     // IMAGES_BASE_URL. Otherwise they land in a local folder and are served by

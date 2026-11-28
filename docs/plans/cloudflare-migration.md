@@ -27,8 +27,8 @@ and downloads are always free.
 | 2 | ~~Switch nameservers at Namecheap~~ ✅ 2026-11-27 | Q | 1 |
 | 3 | ~~Check the site~~ ✅ (GitHub Pages settings still to eyeball) | Q + Claude | 2 |
 | 4 | ~~Create the R2 bucket and connect `images.r-present.com`~~ ✅ | Q | 2 |
-| 5 | Create R2 tokens; put the Pi's on the Pi | Q | 4 |
-| 6 | Test uploads (laptop, then Pi, then iPhone) | Claude + Q | 5 |
+| 5 | ~~Create R2 tokens; put the Pi's on the Pi~~ ✅ | Q | 4 |
+| 6 | Test uploads (~~laptop~~ ✅, then Pi, then iPhone) | Claude + Q | 5 |
 | 7 | Tear down the AWS pieces | Q + Claude | 6 |
 
 Steps 1–3 are the only risky part, because the site depends on DNS. Everything after that is additive.

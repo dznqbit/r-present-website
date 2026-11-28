@@ -5,6 +5,7 @@
   "category": "necklaces",
   "description": "Handcrafted sterling silver necklace featuring a crescent moon pendant. Delicate chain with adjustable length. Perfect for everyday wear or special occasions.",
   "available": true,
-  "images": [],
-  "price": 85
+  "images": ["https://images.r-present.com/products/mEsmAR2o/HtNDON.jpg"],
+  "price": 85,
+  "published": true
 }

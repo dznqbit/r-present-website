@@ -13,6 +13,13 @@ sharp.concurrency(1)
 /** Longest edge of a stored photo. Plenty for the site, ~10x smaller than a phone original. */
 const MAX_EDGE = 2000
 
+/**
+ * Smaller copies saved next to each photo as {hash}-{width}.jpg, so pages can
+ * offer a srcset instead of sending the full photo to every thumbnail. The
+ * site's src/lib/images.ts lists the same widths; keep the two in sync.
+ */
+export const VARIANT_WIDTHS = [400, 800, 1200] as const
+
 export type Uploaded = { url: string; width: number; height: number; bytes: number }
 
 export class UnsupportedImageError extends Error {}
@@ -77,13 +84,36 @@ async function store(key: string, body: Buffer): Promise<string> {
   return `${localBaseUrl}/${key}`
 }
 
+/** `products/abc.jpg` -> `products/abc-400.jpg` */
+export const variantKey = (key: string, width: number) => key.replace(/\.jpg$/, `-${width}.jpg`)
+
+/** Store the smaller copies of the photo at `key`. One at a time, to keep memory down on the Pi. */
+export async function storeVariants(key: string, body: Buffer): Promise<void> {
+  for (const width of VARIANT_WIDTHS) {
+    const variant = await sharp(body)
+      .resize({ width, withoutEnlargement: true })
+      .jpeg({ quality: 80, mozjpeg: true })
+      .toBuffer()
+    await store(variantKey(key, width), variant)
+  }
+}
+
+/**
+ * Store a processed photo plus its smaller copies under `key`. The copies go
+ * first, so by the time the full photo's URL exists, its copies do too.
+ */
+async function storeWithVariants(key: string, body: Buffer): Promise<string> {
+  await storeVariants(key, body)
+  return store(key, body)
+}
+
 export async function uploadImage(collection: string, input: Buffer): Promise<Uploaded> {
   if (!SAFE_SEGMENT.test(collection)) throw new UnsupportedImageError('Unknown collection')
   const { body, width, height } = await processImage(input)
   // Name by content so re-uploading the same photo reuses the same file.
   const hash = createHash('sha256').update(body).digest('hex').slice(0, 20)
   const key = `${config.uploads.prefix}${collection}/${hash}.jpg`
-  const url = await store(key, body)
+  const url = await storeWithVariants(key, body)
   return { url, width, height, bytes: body.length }
 }
 

@@ -1,4 +1,5 @@
 ---
+import { responsiveImage } from "../lib/images";
 import { markdownToText } from "../lib/markdown";
 interface Props {
   sku: string;
@@ -23,7 +24,16 @@ const thumbnail = images[0];
   </div>
 
   <div class="card-image">
-    {thumbnail && <img src={thumbnail} alt={name} loading="lazy" />}
+    {
+      thumbnail && (
+        <img
+          {...responsiveImage(thumbnail, "(max-width: 640px) 100vw, 400px")}
+          alt={name}
+          loading="lazy"
+          decoding="async"
+        />
+      )
+    }
   </div>
 
   <div class="card-footer">

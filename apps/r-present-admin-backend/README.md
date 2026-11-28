@@ -12,6 +12,8 @@ npm run build && npm start
 
 ## Environment
 
+For local dev, put these in `.env` in this folder (gitignored); `npm run dev` loads it. See [.env.example](.env.example).
+
 | Var        | Default                     | Purpose                                |
 | ---------- | --------------------------- | -------------------------------------- |
 | `PORT`     | `8787`                      | HTTP port                              |
@@ -19,7 +21,8 @@ npm run build && npm start
 | `PREVIEW_DIR` | `<repo>/.preview`        | Where preview builds land               |
 | `PREVIEW_PORT` | `8081`                  | Port the preview is served on (by nginx) |
 | `S3_BUCKET` | (unset) | Bucket for photos. Unset means photos are saved to `.uploads/` locally |
-| `S3_REGION` | `us-west-2` | Bucket region |
+| `S3_REGION` | `us-west-2` | Bucket region (`auto` for Cloudflare R2) |
+| `S3_ENDPOINT` | (unset) | S3-compatible endpoint instead of AWS, e.g. `https://<account-id>.r2.cloudflarestorage.com` for R2 |
 | `S3_PREFIX` | (empty) | Key prefix, e.g. `dev/` on a laptop |
 | `IMAGES_BASE_URL` | (empty) | Public base URL for photos, e.g. `https://images.r-present.com` |
 | `LOCAL_UPLOAD_DIR` | `<repo>/.uploads` | Where photos go without S3 |

@@ -37,12 +37,7 @@ Things to know:
 
 - The backend edits the real files in `apps/r-present-website/src/content/`. Use `git diff` to see what it changed.
 - **Publish pushes to GitHub `main` with your own git credentials**, which deploys r-present.com. Use **Discard…** to throw away test edits instead.
-- Without `S3_BUCKET`, uploaded photos are saved to `.uploads/` and only work on this machine; Publish refuses entries that use them. To upload to S3 (into `dev/`, kept apart from real photos), start the backend like this:
-
-  ```sh
-  eval "$(aws configure export-credentials --format env)"
-  S3_BUCKET=r-present S3_PREFIX=dev/ IMAGES_BASE_URL=https://images.r-present.com npm run dev
-  ```
+- Without `S3_BUCKET`, uploaded photos are saved to `.uploads/` and only work on this machine; Publish refuses entries that use them. To upload to Cloudflare R2 instead (into `dev/`, kept apart from real photos), copy `apps/r-present-admin-backend/.env.example` to `.env` in the same folder and fill in the dev token (see [docs/plans/cloudflare-migration.md](docs/plans/cloudflare-migration.md), step 5). `npm run dev` picks it up.
 
 On the Pi, nginx plays the role of steps 2 and 3.
 

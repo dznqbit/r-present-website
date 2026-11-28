@@ -10,9 +10,11 @@ type VariantWidth = (typeof VARIANT_WIDTHS)[number];
 /** Longest edge the uploader stores; the full photo is at most this wide. */
 const FULL_WIDTH = 2000;
 
-// Our uploader names photos by content hash. Anything else (a hand-entered
-// URL, a file in public/) has no copies, so it's used as-is.
-const UPLOADED = /\/[0-9a-f]{20}\.jpg$/;
+// Names our uploader gives photos: {original}/{display}.jpg (e.g.
+// a2BcF19x/Q7mZp2.jpg), or a 20-hex-digit name from before originals were
+// kept. Anything else (a hand-entered URL, a file in public/) has no copies,
+// so it's used as-is.
+const UPLOADED = /\/(?:[0-9A-Za-z]{8}\/[0-9A-Za-z]{6}|[0-9a-f]{20})\.jpg$/;
 
 const hasVariants = (url: string) => UPLOADED.test(url);
 

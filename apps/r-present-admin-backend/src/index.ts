@@ -18,7 +18,14 @@ import {
 } from './content.js'
 import { getPreviewStatus, initPreview, startPreview } from './preview.js'
 import { discardChanges, getPublishStatus, isBusy, PublishError, startPublish } from './publish.js'
-import { localUploadPath, UnsupportedImageError, uploadImage, usingLocalUploads } from './uploads.js'
+import {
+  localUploadPath,
+  parseCrop,
+  recropImage,
+  UnsupportedImageError,
+  uploadImage,
+  usingLocalUploads,
+} from './uploads.js'
 
 const app = new Hono().basePath('/api')
 
@@ -75,7 +82,8 @@ app.delete('/collections/:collection/entries/:id', async (c) => {
   return c.body(null, 204)
 })
 
-// Multipart form with a single "file" field. ?collection=products decides the folder.
+// Multipart form with a "file" field and an optional "crop" field (JSON crop
+// box, percentages). ?collection=products decides the folder and the shape.
 app.post(
   '/uploads',
   bodyLimit({
@@ -87,10 +95,22 @@ app.post(
     const form = await c.req.formData()
     const file = form.get('file')
     if (!(file instanceof File)) return c.json({ error: 'No file was sent.' }, 400)
-    const uploaded = await uploadImage(collection, Buffer.from(await file.arrayBuffer()))
+    const rawCrop = form.get('crop')
+    const crop = typeof rawCrop === 'string' && rawCrop ? parseCrop(rawCrop) : null
+    const uploaded = await uploadImage(collection, Buffer.from(await file.arrayBuffer()), crop)
     return c.json(uploaded, 201)
   },
 )
+
+// Re-crop a photo that's already uploaded: { collection, url, crop }. Stores
+// the result as a new photo and returns it; the original is left alone.
+app.post('/uploads/recrop', async (c) => {
+  const body = (await c.req.json().catch(() => null)) as { collection?: unknown; url?: unknown; crop?: unknown } | null
+  if (!body || typeof body.collection !== 'string' || typeof body.url !== 'string') {
+    return c.json({ error: 'Body must be { collection, url, crop }' }, 400)
+  }
+  return c.json(await recropImage(body.collection, body.url, parseCrop(body.crop)), 201)
+})
 
 // Serves locally stored uploads (development only, when S3 isn't configured).
 app.get('/media/*', async (c) => {

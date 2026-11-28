@@ -34,9 +34,13 @@ async function jsonFiles(dir: string): Promise<string[]> {
   return nested.flat()
 }
 
-// Only photos our uploader made: content-hash names under IMAGES_BASE_URL.
+// Only photos our uploader made, under IMAGES_BASE_URL: {original}/{display}.jpg,
+// or a 20-hex-digit name from before originals were kept.
 const escaped = publicBaseUrl.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const PHOTO_URL = new RegExp(`${escaped}/[\\w/-]*?[0-9a-f]{20}\\.jpg`, 'g')
+const PHOTO_URL = new RegExp(
+  `${escaped}/[\\w/-]*?(?:[0-9A-Za-z]{8}/[0-9A-Za-z]{6}|[0-9a-f]{20})\\.jpg`,
+  'g',
+)
 
 const urls = new Set<string>()
 for (const file of await jsonFiles(path.join(config.siteDir, 'src', 'content'))) {

@@ -57,6 +57,33 @@ export class ApiError extends Error {
 export type Uploaded = { url: string; width: number; height: number; bytes: number }
 
 /**
+ * Collections whose photos are cropped to a fixed shape (width / height). The
+ * backend's src/uploads.ts (PHOTO_ASPECT) lists the same shapes and enforces
+ * them; keep the two in sync.
+ */
+export const PHOTO_ASPECT: Record<string, number> = {
+  products: 3 / 4,
+}
+
+/**
+ * How to cut a photo: turn it `rotation` degrees clockwise (quarter turns),
+ * then keep the box, as percentages (0–100) of the turned photo.
+ */
+export type Crop = { x: number; y: number; width: number; height: number; rotation: Rotation }
+export type Rotation = 0 | 90 | 180 | 270
+
+/**
+ * The kept original behind a photo the site shows, which is what re-crops
+ * start from (see the storage layout in the backend's src/uploads.ts):
+ * …/products/a2BcF19x/Q7mZp2.jpg -> …/originals/products/a2BcF19x.jpg.
+ * Photos from before originals were kept are their own original.
+ */
+export function originalUrl(displayUrl: string): string {
+  const m = /^(.*\/)([a-z0-9-]+)\/([0-9A-Za-z]{8})\/[0-9A-Za-z]{6}\.jpg$/.exec(displayUrl)
+  return m ? `${m[1]}originals/${m[2]}/${m[3]}.jpg` : displayUrl
+}
+
+/**
  * Upload one photo. Uses XHR rather than fetch because fetch can't report
  * upload progress, and phone photos on home Wi-Fi to a Pi take a moment.
  */
@@ -64,6 +91,7 @@ export function uploadImage(
   collection: string,
   file: File,
   onProgress: (fraction: number) => void,
+  crop: Crop | null = null,
 ): Promise<Uploaded> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
@@ -84,6 +112,7 @@ export function uploadImage(
     xhr.onerror = () => reject(new ApiError("Couldn't reach the server"))
     const form = new FormData()
     form.append('file', file)
+    if (crop) form.append('crop', JSON.stringify(crop))
     xhr.send(form)
   })
 }
@@ -126,4 +155,10 @@ export const api = {
   discard: () => request<{ discarded: unknown[] }>('/discard', { method: 'POST' }),
   previewStatus: () => request<PreviewStatus>('/preview'),
   startPreview: () => request<PreviewStatus>('/preview', { method: 'POST' }),
+  /** Crop an already-uploaded photo; returns a new photo (the original stays). */
+  recrop: (collection: string, url: string, crop: Crop) =>
+    request<Uploaded>('/uploads/recrop', {
+      method: 'POST',
+      body: JSON.stringify({ collection, url, crop }),
+    }),
 }

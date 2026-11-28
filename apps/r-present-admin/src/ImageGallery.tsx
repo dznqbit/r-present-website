@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { uploadImage } from './api'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { api, originalUrl, PHOTO_ASPECT, uploadImage, type Crop } from './api'
+import { CropDialog } from './CropDialog'
 import type { CaptionedImage } from './fields'
 
 type Props = {
@@ -19,9 +20,20 @@ type Props = {
 
 type Item = CaptionedImage
 type Pending = { key: number; name: string; progress: number; error: string | null }
+/** A picked photo waiting in the crop tool, with a preview URL for it. */
+type ToCrop = { file: File; preview: string }
 
 // iPhones hand over HEIC unless the page only accepts these; then iOS converts to JPEG.
 const ACCEPT = 'image/jpeg,image/png,image/webp'
+
+/** 0.75 -> "3:4" */
+function aspectLabel(aspect: number): string {
+  for (let h = 1; h <= 20; h++) {
+    const w = aspect * h
+    if (Math.abs(w - Math.round(w)) < 0.001) return `${Math.round(w)}:${h}`
+  }
+  return aspect.toFixed(2)
+}
 
 function parse(value: string, captioned: boolean): Item[] {
   const raw = value ? (JSON.parse(value) as unknown[]) : []
@@ -50,6 +62,15 @@ export function ImageGallery({
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const nextKey = useRef(0)
+  // Collections with a fixed photo shape get the crop tool.
+  const aspect = PHOTO_ASPECT[collection]
+  const [cropQueue, setCropQueue] = useState<ToCrop[]>([])
+  // An uploaded photo being re-cropped, and URLs whose re-crop is in flight.
+  const [recropping, setRecropping] = useState<string | null>(null)
+  const [recropBusy, setRecropBusy] = useState<string[]>([])
+  const [recropError, setRecropError] = useState<string | null>(null)
+  // Uploads run one after another (see runUpload), even when started separately.
+  const uploadChain = useRef<Promise<void>>(Promise.resolve())
 
   // Uploads finish one after another; always build on the latest list.
   const latest = useRef(items)
@@ -57,22 +78,22 @@ export function ImageGallery({
     latest.current = items
   })
 
-  const busy = pending.some((p) => p.error === null)
+  const busy = pending.some((p) => p.error === null) || cropQueue.length > 0 || recropBusy.length > 0
   useEffect(() => onBusyChange(busy), [busy, onBusyChange])
 
   const commit = (next: Item[]) => onChange(serialize(next, captioned))
 
-  const addFiles = async (files: File[]) => {
-    const jobs = files.map((file) => ({ key: nextKey.current++, file }))
-    setPending((p) => [
-      ...p,
-      ...jobs.map(({ key, file }) => ({ key, name: file.name, progress: 0, error: null })),
-    ])
-    // One at a time: the Pi resizes each photo and has little memory to spare.
-    for (const { key, file } of jobs) {
+  // One at a time: the Pi resizes each photo and has little memory to spare.
+  const runUpload = (file: File, crop: Crop | null) => {
+    const key = nextKey.current++
+    setPending((p) => [...p, { key, name: file.name, progress: 0, error: null }])
+    uploadChain.current = uploadChain.current.then(async () => {
       try {
-        const uploaded = await uploadImage(collection, file, (progress) =>
-          setPending((p) => p.map((j) => (j.key === key ? { ...j, progress } : j))),
+        const uploaded = await uploadImage(
+          collection,
+          file,
+          (progress) => setPending((p) => p.map((j) => (j.key === key ? { ...j, progress } : j))),
+          crop,
         )
         commit([...latest.current, { url: uploaded.url, description: '' }])
         setPending((p) => p.filter((j) => j.key !== key))
@@ -80,8 +101,47 @@ export function ImageGallery({
         const message = err instanceof Error ? err.message : String(err)
         setPending((p) => p.map((j) => (j.key === key ? { ...j, error: message } : j)))
       }
+    })
+  }
+
+  const addFiles = (files: File[]) => {
+    if (!aspect) {
+      files.forEach((file) => runUpload(file, null))
+      return
+    }
+    setCropQueue((q) => [...q, ...files.map((file) => ({ file, preview: URL.createObjectURL(file) }))])
+  }
+
+  // Done with the photo at the front of the crop queue: upload it when it
+  // was framed, or drop it when the crop was cancelled.
+  const finishCrop = (crop: Crop | null) => {
+    const [current, ...rest] = cropQueue
+    if (!current) return
+    URL.revokeObjectURL(current.preview)
+    setCropQueue(rest)
+    if (crop) runUpload(current.file, crop)
+  }
+
+  const recrop = async (url: string, crop: Crop) => {
+    setRecropping(null)
+    setRecropError(null)
+    setRecropBusy((b) => [...b, url])
+    try {
+      const uploaded = await api.recrop(collection, url, crop)
+      commit(latest.current.map((item) => (item.url === url ? { ...item, url: uploaded.url } : item)))
+    } catch (err) {
+      setRecropError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setRecropBusy((b) => b.filter((u) => u !== url))
     }
   }
+
+  // Don't leak previews if the editor closes with photos still waiting.
+  const queueRef = useRef(cropQueue)
+  useEffect(() => {
+    queueRef.current = cropQueue
+  })
+  useEffect(() => () => queueRef.current.forEach((c) => URL.revokeObjectURL(c.preview)), [])
 
   const move = (from: number, to: number) => {
     if (to < 0 || to >= items.length) return
@@ -103,10 +163,17 @@ export function ImageGallery({
         {!required && <span className="muted"> (optional)</span>}
       </span>
 
+      {aspect && (
+        <p className="muted small gallery-hint">
+          Photos are cropped to a {aspectLabel(aspect)} shape. You'll frame each one after picking it.
+        </p>
+      )}
+
       <div
         className={`gallery${dragging ? ' dragging' : ''}`}
         role="group"
         aria-labelledby={`${id}-label`}
+        style={aspect ? ({ '--tile-aspect': aspect } as CSSProperties) : undefined}
         onDragOver={(e) => {
           e.preventDefault()
           setDragging(true)
@@ -116,7 +183,7 @@ export function ImageGallery({
           e.preventDefault()
           setDragging(false)
           const files = [...e.dataTransfer.files].filter((f) => f.type.startsWith('image/'))
-          if (files.length > 0) void addFiles(files)
+          if (files.length > 0) addFiles(files)
         }}
       >
         {items.map((item, i) => (
@@ -124,6 +191,23 @@ export function ImageGallery({
             <div className="tile-img">
               <img src={item.url} alt={item.description || `Photo ${i + 1}`} loading="lazy" />
               {i === 0 && <span className="cover-badge">Cover</span>}
+              {recropBusy.includes(item.url) && (
+                <div className="tile-overlay">
+                  <span className="spinner" aria-hidden="true" />
+                  <span className="small">Cropping…</span>
+                </div>
+              )}
+              {aspect && (
+                <button
+                  type="button"
+                  className="tile-crop"
+                  aria-label={`Crop photo ${i + 1}`}
+                  disabled={recropBusy.includes(item.url)}
+                  onClick={() => setRecropping(item.url)}
+                >
+                  Crop
+                </button>
+              )}
               <div className="tile-actions">
                 <button
                   type="button"
@@ -213,12 +297,36 @@ export function ImageGallery({
           onChange={(e) => {
             const files = [...(e.target.files ?? [])]
             e.target.value = '' // allow picking the same file again later
-            if (files.length > 0) void addFiles(files)
+            if (files.length > 0) addFiles(files)
           }}
         />
       </div>
 
+      {recropError && <p className="err">Couldn't crop that photo: {recropError}</p>}
       {error && <p className="err">{error}</p>}
+
+      {aspect && cropQueue[0] && (
+        <CropDialog
+          key={cropQueue[0].preview}
+          src={cropQueue[0].preview}
+          aspect={aspect}
+          title="Frame this photo"
+          note={cropQueue.length > 1 ? `${cropQueue.length - 1} more to go` : undefined}
+          onConfirm={(crop) => finishCrop(crop)}
+          onCancel={() => finishCrop(null)}
+        />
+      )}
+      {aspect && !cropQueue[0] && recropping && (
+        <CropDialog
+          key={recropping}
+          // The crop applies to the original, so frame the original.
+          src={originalUrl(recropping)}
+          aspect={aspect}
+          title="Crop this photo"
+          onConfirm={(crop) => void recrop(recropping, crop)}
+          onCancel={() => setRecropping(null)}
+        />
+      )}
     </div>
   )
 }

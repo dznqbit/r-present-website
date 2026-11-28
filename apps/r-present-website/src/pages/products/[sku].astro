@@ -1,6 +1,7 @@
 ---
 import ProductGallery from "../../components/ProductGallery.astro";
 import { renderMarkdown } from "../../lib/markdown";
+import { formatShortMarketDate, getUpcomingMarkets } from "../../lib/markets";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
 
@@ -16,13 +17,15 @@ export async function getStaticPaths() {
 const { product } = Astro.props;
 const {
   name,
-  category,
   description,
   available,
   images,
-  createdAt,
   buyLinkUrl,
 } = product.data;
+
+// Where to find a piece that's for sale in person. "Upcoming" means as of
+// the last site build.
+const markets = available && !buyLinkUrl ? await getUpcomingMarkets(3) : [];
 
 // The main photo is half the page wide on desktop, full width on phones.
 const MAIN_SIZES = "(max-width: 768px) 100vw, 600px";
@@ -38,12 +41,7 @@ const MAIN_SIZES = "(max-width: 768px) 100vw, 600px";
       </div>
 
       <div class="product-info">
-        <p class="category">
-          Category: <a href={`/categories/${category}`}>{category}</a>
-        </p>
-
         <div class="description">
-          <h2>Description</h2>
           <div class="markdown" set:html={renderMarkdown(description)} />
         </div>
 
@@ -60,10 +58,45 @@ const MAIN_SIZES = "(max-width: 768px) 100vw, 600px";
                   Buy Now
                 </a>
               ) : (
-                <p class="available">
-                  <strong>Available</strong> - Find us at an{" "}
-                  <a href="/markets">upcoming market</a>
-                </p>
+                <div class="available">
+                  {markets.length > 0 ? (
+                    <>
+                      <p>
+                        <strong>Available</strong> at our upcoming markets:
+                      </p>
+                      <ul class="market-list">
+                        {markets.map(({ data: market }) => (
+                          <li>
+                            <span class="market-date">
+                              {formatShortMarketDate(market.date)} ·{" "}
+                              {market.timeDescription}
+                            </span>
+                            {market.url ? (
+                              <a
+                                class="market-name"
+                                href={market.url}
+                                target="_blank"
+                                rel="noopener"
+                              >
+                                {market.name}
+                              </a>
+                            ) : (
+                              <span class="market-name">{market.name}</span>
+                            )}
+                            <span class="market-location">
+                              {market.location}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <p>
+                      <strong>Available</strong> in person. No markets are
+                      scheduled right now; check back soon!
+                    </p>
+                  )}
+                </div>
               )
             ) : (
               <p class="sold-out">
@@ -71,18 +104,6 @@ const MAIN_SIZES = "(max-width: 768px) 100vw, 600px";
               </p>
             )
           }
-        </div>
-
-        <div class="meta">
-          <p class="created-date">
-            Created: {
-              new Intl.DateTimeFormat("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              }).format(createdAt)
-            }
-          </p>
         </div>
       </div>
     </div>
@@ -137,30 +158,10 @@ const MAIN_SIZES = "(max-width: 768px) 100vw, 600px";
     margin: 0 0 1.5rem 0;
   }
 
-  .category {
-    color: #666;
-    margin: 0 0 2rem 0;
-    text-transform: capitalize;
-  }
-
-  .category a {
-    color: #333;
-    text-decoration: none;
-  }
-
-  .category a:hover {
-    text-decoration: underline;
-  }
-
   .description {
     margin-bottom: 2rem;
     padding-bottom: 2rem;
     border-bottom: 1px solid #e0e0e0;
-  }
-
-  .description h2 {
-    font-size: 1.25rem;
-    margin: 0 0 1rem 0;
   }
 
   .description .markdown {
@@ -178,18 +179,47 @@ const MAIN_SIZES = "(max-width: 768px) 100vw, 600px";
 
   .availability {
     margin-bottom: 2rem;
-    padding-bottom: 2rem;
-    border-bottom: 1px solid #e0e0e0;
   }
 
-  .available {
-    color: #2d5f2e;
+  .available p {
     margin: 0;
   }
 
-  .available a {
+  .available strong {
     color: #2d5f2e;
+  }
+
+  .market-list {
+    list-style: none;
+    margin: 1rem 0 0;
+    padding: 0;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  .market-list li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .market-date {
+    font-size: 0.875rem;
+    color: #666;
+  }
+
+  .market-name {
+    font-weight: bold;
+  }
+
+  a.market-name:hover {
     text-decoration: underline;
+  }
+
+  .market-location {
+    font-size: 0.875rem;
+    color: #444;
   }
 
   .buy-link {
@@ -208,15 +238,6 @@ const MAIN_SIZES = "(max-width: 768px) 100vw, 600px";
 
   .sold-out {
     color: #666;
-    margin: 0;
-  }
-
-  .meta {
-    color: #888;
-    font-size: 0.875rem;
-  }
-
-  .meta p {
     margin: 0;
   }
 
